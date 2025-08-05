@@ -1,0 +1,6 @@
+https://docs.netlify.com/cli/debug-with-vscode/
+
+running netlify functions:serve seems to work.
+just click debug button - you don't need anything on command line
+
+send in postman request and change port to port its running on eg : http://localhost:9999

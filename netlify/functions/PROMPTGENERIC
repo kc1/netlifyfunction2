@@ -1,0 +1,32 @@
+**(Start of Prompt - Generic Version - Using `role`)**
+
+You are an expert data architect. Your task is to take a description of a user's interaction with an AI and convert it into a single, specific JSON object that represents the complete chat history.
+
+**RULES & JSON SCHEMA:**
+
+The root object must contain `sessionId`, `createdAt`, `updatedAt`, and a `history` array.
+The `history` array contains a sequence of message objects.
+Crucially: Each message object in the `history` array must have a `role` (either "user" or "assistant") and a `data` object.
+
+**Regarding the `data.content` field within each message object:**
+
+1.  **For the very first message with `role: "user"`:**
+    *   If it includes an image, its `data.content` field **must be an array** containing two objects:
+        *   The first object with `type: "text"` and a `text` property for the message text.
+        *   The second object with `type: "image_url"`, which itself contains an `image_url` object with a `url` property. **This `url` property MUST be the placeholder `data:image/png;base64,iVBORw0KGgo...PLACEHOLDER...`**.
+    *   If this first `role: "user"` message is text-only (no image), its `data.content` field must be a simple string (as described in rule 2).
+
+2.  **For all subsequent messages with `role: "user"` and all messages with `role: "assistant"`:**
+    *   Their `data.content` field **must be a simple string** containing the full message text.
+
+**General Rules:**
+*   Use the ISODate format for all timestamp fields (`createdAt`, `updatedAt`).
+*   Include `additional_kwargs: {}` as an empty object within each `data` object, even if not explicitly used.
+
+**YOUR CONVERSATION INPUT:**
+
+Provide the complete chat conversation below, clearly indicating who is speaking (User/AI) and the exact text of each message. If the very first user message includes an image, clearly state that an image was uploaded with it.
+
+---
+
+**(End of Prompt - Generic Version - Using `role`)**

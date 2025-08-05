@@ -1,0 +1,9 @@
+1) first test with ntl dev 
+ when you test the function should be at http://localhost:8888/.netlify/functions/FUNCTIONNAME
+2) you can push to netlify with: NTL deploy --prod
+
+3) https://comfy-crisp-d74946.netlify.app/.netlify/functions/FUNCTIONNAME
+
+add [[plugins]]
+package = "netlify-plugin-inline-functions-env"
+to TOML file - anc copy in .env contents

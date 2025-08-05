@@ -1,0 +1,44 @@
+{
+  "name": "netlifyfunction2",
+  "version": "1.0.0",
+  "description": "Learn how to use serverless functions in less than 30 minutes!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:debug": "NODE_OPTIONS='--inspect' netlify dev",
+    "debug": "netlify dev --inspect"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kc1/netlifyfunction2.git"
+  },
+  "author": "Your name <your@email.com> (https://your-url.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kc1/netlifyfunction2/issues"
+  },
+  "homepage": "https://github.com/kc1/netlifyfunction2#readme",
+  "dependencies": {
+    "@langchain/openai": "^0.5.16",
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.4.7",
+    "dropbox": "^10.34.0",
+    "dropbox-v2-api": "^2.5.11",
+    "encoding": "^0.1.13",
+    "express": "^4.21.2",
+    "extract-us-city": "^0.0.7",
+    "jquery": "^3.7.1",
+    "jsdom": "^25.0.1",
+    "langchain": "^0.3.29",
+    "mongodb": "^5.1.0",
+    "node-fetch": "^2.6.1",
+    "node-persist": "^4.0.3",
+    "qs": "^6.13.1",
+    "unix-timestamp": "^1.0.2"
+  },
+  "devDependencies": {
+    "@sparticuz/chromium": "^109.0.1",
+    "netlify-cli": "^19.0.2"
+  }
+}

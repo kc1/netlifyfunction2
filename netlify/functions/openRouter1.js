@@ -1,4 +1,4 @@
-const fetch = require("node-fetch");
+const fetch= require("node-fetch");
 
 async function openRouterApiRequest(myPrompt) {
   const apiKey = "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";

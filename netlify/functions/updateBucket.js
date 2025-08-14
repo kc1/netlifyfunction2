@@ -1,7 +1,7 @@
 require("dotenv").config();
 const { MongoClient } = require("mongodb");
-// var murl = process.env.MONGODB_URI;
-var murl = "mongodb+srv://realoption11:RZR5KLeX7s6BFWte@cluster0.cqtemdq.mongodb.net/?retryWrites=true&w=majority";
+var murl = process.env.MONGODB_URI;
+// var murl = "mongodb+srv://realoption11:RZR5KLeX7s6BFWte@cluster0.cqtemdq.mongodb.net/?retryWrites=true&w=majority";
 const client = new MongoClient(murl);
 client.connect();
 const database = client.db("mydata");

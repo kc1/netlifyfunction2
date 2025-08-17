@@ -4,3 +4,7 @@ test.js
 
 # Local Netlify folder
 .netlify
+
+# Environment files
+.env
+.env.*

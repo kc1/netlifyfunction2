@@ -1,26 +1,12 @@
 const fetch = require("node-fetch");
 
-function callOpenRouter2(imageLink, prompt) {
-  function imageTest() {
-    const text = "What is in this image?";
-    // const imageLink = 'https://www.dropbox.com/scl/fi/b7tfviennf40hgz5c5lrn/wi_Marathon_7830082140992_contours.png?rlkey=plpddg83p82dxcebndlg9xlla&dl=0';
-    const imageLink =
-      "https://www.dropbox.com/scl/fi/b7tfviennf40hgz5c5lrn/wi_Marathon_7830082140992_contours.png?rlkey=plpddg83p82dxcebndlg9xlla&raw=1";
+async function openRouterApiRequest(imageLink, myPrompt) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  // Replace apiKey above with a secure value in production
 
-    let x = callOpenRouter2(imageLink, text);
-  }
-
-  var url = "https://openrouter.ai/api/v1/chat/completions";
-
-  var headers = {
-    Authorization:
-      "Bearer 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",
-    "Content-Type": "application/json",
-  };
-
-  // "model": "meta-llama/llama-3.2-90b-vision-instruct",
-
-  var payload = {
+  // const imageUrl = "https://drive.google.com/thumbnail?sz=w1000&id=1cpHMDtvv5xoEMYqe2PdQZBpIrZIKuoba";
+  const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
+  const payload = {
     model: "google/gemini-2.5-flash",
     messages: [
       {
@@ -28,61 +14,49 @@ function callOpenRouter2(imageLink, prompt) {
         content: [
           {
             type: "text",
-            text: prompt, // No need to manually add quotes
+            text: myPrompt,
           },
           {
             type: "image_url",
-            image_url: {
-              url: imageLink, // Use the passed parameter
-            },
+            image_url: { url: imageLink },
           },
         ],
       },
     ],
   };
 
-  var options = {
-    method: "post",
-    headers: headers,
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true, // Allows handling of non-200 responses
+  const options = {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
   };
 
   try {
-    var response = UrlFetchApp.fetch(url, options);
-    var result = response.getContentText();
-    Logger.log("Response: " + result);
-    return result;
-  } catch (error) {
-    Logger.log("Error: " + error);
+    const response = await fetch(apiEndpoint, options);
+    const responseBody = await response.text();
+    console.log("Response Code:", response.status);
+    console.log("Response Body:", responseBody);
+
+    // Parse the response as JSON
+    const jsonResponse = JSON.parse(responseBody);
+    console.log(jsonResponse);
+    return jsonResponse.choices[0].message.content;
+  } catch (e) {
+    console.error("Failed to fetch or parse response as JSON:", e.message);
   }
 }
 
 exports.handler = async (event, context) => {
   console.log("Hello from Netlify Function!");
 
-  let postedFilename = null;
-  if (event.httpMethod === "POST") {
-    try {
-      const data = JSON.parse(event.body);
-      postedFilename = data.filename;
-      console.log("Received filename:", postedFilename);
-    } catch (error) {
-      console.error("Error parsing the request body:", error);
-    }
-  }
-
-  var waterFile = filteredRow.WaterURL;
-  var contourFile = filteredRow.ContourURL;
-
-  Logger.log("Water File: " + waterFile);
-  Logger.log("Contour File: " + contourFile);
+  const objArr = JSON.parse(event.body);
+  console.log("Received body:", objArr);
 
   const waterText =
-    "in the role of a real estate investor and land surveyor, can you estimate how much pf the selected lot is covered by water or in a flood zone?. In the response, please use no more than 30 text characters,with no markdown, giving only the estimated percentage flood zone, estimated percentage ground water, and total estimated percentage";
-
-  const waterText1 =
-    "in the role of a real estate investor and land surveyor, can you estimate how much pf the selected lot is covered by water or in a flood zone?. In the response, please return the following template only: {estimated percentage flood zone: <>, estimated percentage ground water: <>, and total estimated percentage: <>";
+    "in the role of a real estate investor and land surveyor, can you estimate how much pf the selected lot is covered by water or in a flood zone?. In the response, please return the following the full reasoning text followed by a json template that looks like: {estimated percentage flood zone: <>, estimated percentage ground water: <>, and total estimated percentage: <>}";
 
   const contourText =
     "in the role of a real estate investor and land surveyor, is the majority of the selected lot hilly or relatively flat and buildable?";
@@ -91,18 +65,27 @@ exports.handler = async (event, context) => {
   // waterLink = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
   // contourLink = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
 
-  let waterResponse = callOpenRouter2(waterFile, waterText1);
-  let contourResponse = callOpenRouter2(contourFile, contourText);
+  let results = [];
+  for (let i = 0; i < objArr.length; i++) {
+    const obj = objArr[i];
+    const waterFile = obj.WaterURL;
+    const contourFile = obj.ContourURL;
 
-  const wro = JSON.parse(waterResponse);
-  const cro = JSON.parse(contourResponse);
+    console.log("Water File: " + waterFile);
+    console.log("Contour File: " + contourFile);
 
-  const wr = wro.choices[0].message.content;
-  const cr = cro.choices[0].message.content;
+    // Await the async calls
+    const waterResponse = await openRouterApiRequest(waterFile, waterText);
+    const contourResponse = await openRouterApiRequest(
+      contourFile,
+      contourText
+    );
 
-  // Call createThyroidReport and wait for its response.
-  const response = await createThyroidReport();
-  console.log("Response from createThyroidReport:", response);
+    obj.WaterResponse = waterResponse;
+    obj.ContourResponse = contourResponse;
+    results.push(obj);
+  }
+  console.log("Results:", results);
 
   return {
     statusCode: 200,
@@ -110,9 +93,8 @@ exports.handler = async (event, context) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      message: "Hello World",
-      // filename: postedFilename,
-      // response: response,
+      message: "Processed results",
+      results: JSON.stringify(results),
     }),
   };
 };

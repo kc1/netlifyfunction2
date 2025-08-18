@@ -2,6 +2,7 @@ const fetch = require("node-fetch");
 
 async function openRouterApiRequest(imageLink, myPrompt) {
   const apiKey = process.env.OPENROUTER_API_KEY;
+  console.log("API Key:", apiKey);
   // Replace apiKey above with a secure value in production
 
   // const imageUrl = "https://drive.google.com/thumbnail?sz=w1000&id=1cpHMDtvv5xoEMYqe2PdQZBpIrZIKuoba";

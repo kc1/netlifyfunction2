@@ -1,8 +1,8 @@
 const fetch = require("node-fetch");
 
-async function openRouterApiRequest(imageLink, myPrompt) {
+async function openRouterApiRequest(obj,imageLink, myPrompt) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  console.log("API Key:", apiKey);
+  // console.log("API Key:", apiKey);
   // Replace apiKey above with a secure value in production
 
   // const imageUrl = "https://drive.google.com/thumbnail?sz=w1000&id=1cpHMDtvv5xoEMYqe2PdQZBpIrZIKuoba";
@@ -44,7 +44,8 @@ async function openRouterApiRequest(imageLink, myPrompt) {
     // Parse the response as JSON
     const jsonResponse = JSON.parse(responseBody);
     console.log(jsonResponse);
-    return jsonResponse.choices[0].message.content;
+    let output = jsonResponse.choices[0].message.content;
+    return output;
   } catch (e) {
     console.error("Failed to fetch or parse response as JSON:", e.message);
   }
@@ -66,7 +67,7 @@ exports.handler = async (event, context) => {
   // waterLink = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
   // contourLink = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
 
-  let results = [];
+  let promises = [];
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
     const waterFile = obj.WaterURL;
@@ -76,16 +77,24 @@ exports.handler = async (event, context) => {
     console.log("Contour File: " + contourFile);
 
     // Await the async calls
-    const waterResponse = await openRouterApiRequest(waterFile, waterText);
+/*     const waterResponse = await openRouterApiRequest(waterFile, waterText);
     const contourResponse = await openRouterApiRequest(
       contourFile,
       contourText
     );
+ */
+    promises.push(openRouterApiRequest(obj, waterFile, waterText));
+    promises.push(openRouterApiRequest(obj, contourFile, contourText));
 
-    obj.WaterResponse = waterResponse;
-    obj.ContourResponse = contourResponse;
-    results.push(obj);
+    // obj.WaterResponse = waterResponse;
+    // obj.ContourResponse = contourResponse;
+    // results.push(obj);
+    
   }
+
+  console.log("Promises:", promises);
+  
+  const results = await Promise.allSettled(promises);
   console.log("Results:", results);
 
   return {

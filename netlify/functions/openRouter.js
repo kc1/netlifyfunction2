@@ -1,6 +1,6 @@
 const fetch = require("node-fetch");
 
-async function openRouterApiRequest(obj,imageLink, myPrompt) {
+async function openRouterApiRequest(imageLink, myPrompt) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   // console.log("API Key:", apiKey);
   // Replace apiKey above with a secure value in production
@@ -68,34 +68,63 @@ exports.handler = async (event, context) => {
   // contourLink = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
 
   let promises = [];
-  for (let i = 0; i < objArr.length; i++) {
+  let myObjs = [];
+  let waterFile, contourFile;
+  for (let i = 0;i < objArr.length; i++) {
     const obj = objArr[i];
-    const waterFile = obj.WaterURL;
-    const contourFile = obj.ContourURL;
-
-    console.log("Water File: " + waterFile);
-    console.log("Contour File: " + contourFile);
+    if (obj.WaterURL && !obj.WaterResponse) {
+      waterFile = obj.WaterURL;
+      console.log("Water File: " + waterFile);
+      promises.push(openRouterApiRequest(waterFile, waterText));
+      obj.WaterResponse = "PENDING";
+      myObjs.push(obj);
+    }
+    if (obj.ContourURL && !obj.ContourResponse) {
+      contourFile = obj.ContourURL;
+      console.log("Contour File: " + contourFile);
+      promises.push(openRouterApiRequest(contourFile, contourText));
+      obj.ContourResponse = "PENDING";
+      myObjs.push(obj);
+    }
 
     // Await the async calls
-/*     const waterResponse = await openRouterApiRequest(waterFile, waterText);
+    /*     const waterResponse = await openRouterApiRequest(waterFile, waterText);
     const contourResponse = await openRouterApiRequest(
       contourFile,
       contourText
     );
  */
-    promises.push(openRouterApiRequest(obj, waterFile, waterText));
-    promises.push(openRouterApiRequest(obj, contourFile, contourText));
 
     // obj.WaterResponse = waterResponse;
     // obj.ContourResponse = contourResponse;
     // results.push(obj);
-    
   }
 
   console.log("Promises:", promises);
-  
+
   const results = await Promise.allSettled(promises);
   console.log("Results:", results);
+  
+  
+  let output = [];
+  for (let i = 0;i < myObjs.length; i++) {
+    const myObj = myObjs[i];
+    const result = results[i];
+    if (result.status === "fulfilled") {
+      if (myObj.WaterResponse === "PENDING") {
+        myObj.WaterResponse = result.value;
+      }else if (myObj.ContourResponse === "PENDING") {
+        myObj.ContourResponse = result.value;
+      }
+    } else if (result.status === "rejected") {
+      if (myObj.WaterResponse === "PENDING") {
+        myObj.WaterResponse = "Error: " + result.reason.message;
+      } else if (myObj.ContourResponse === "PENDING") {
+        myObj.ContourResponse = "Error: " + result.reason.message;
+      }
+    }    
+    output.push(myObj);
+  }
 
   return {
     statusCode: 200,
@@ -104,7 +133,7 @@ exports.handler = async (event, context) => {
     },
     body: JSON.stringify({
       message: "Processed results",
-      results: JSON.stringify(results),
+      results: JSON.stringify(output),
     }),
   };
 };

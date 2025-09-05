@@ -1,6 +1,7 @@
+const { json } = require("express");
 const fetch = require("node-fetch");
 
-function geoQuery(lon, lat, radius, minAcreage, maxAcreage, daysBack = 183) {
+function geoQuery(lon, lat, radius, minAcreage, maxAcreage, daysBack = 600) {
   const metersinmile = 1609.34;
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysBack);
@@ -20,13 +21,18 @@ function geoQuery(lon, lat, radius, minAcreage, maxAcreage, daysBack = 183) {
   };
 }
 
-async function fetchMongoDBDataAPI(filterObj, coll) {
+async function fetchMongoDBData(filterObj, coll) {
   const url =
     "https://us-east-1.aws.data.mongodb-api.com/app/data-wygci/endpoint/data/v1/action/find";
-  const apiKey = process.env.MONGODB_API_KEY; // Use .env for secrets
+  const apiKey =
+    "1GxuC9AAuc77xJklnS1PSHVKhZUt3QkcOaqdSYRqoeQVrSnf8jtGtLO3zGlNfm4T";
+  const authToken =
+    "1GxuC9AAuc77xJklnS1PSHVKhZUt3QkcOaqdSYRqoeQVrSnf8jtGtLO3zGlNfm4T";
   const headers = {
     "Content-Type": "application/json",
+    "Access-Control-Request-Headers": "*",
     "api-key": apiKey,
+    Authorization: authToken,
   };
   const payload = {
     collection: coll,
@@ -38,21 +44,32 @@ async function fetchMongoDBDataAPI(filterObj, coll) {
   };
   const response = await fetch(url, {
     method: "POST",
-    headers,
+    headers: headers,
     body: JSON.stringify(payload),
   });
-  return response.json();
+  const result = await response.json();
+  return result;
 }
 
-function cosineDistanceBetweenPoints(lat1, lon1, lat2, lon2) {
-  // Implement your distance calculation here
-  // For now, just return 0
-  return 0;
-}
+async function getSoldPPA(properties) {
+  let avgSoldPPA = 0;
+  if (properties.length > 0) {
+    let totalSoldPPA = 0;
+    for (var i = 0; i < properties.length; i++) {
+      let property = properties[i];
+      property.soldPPA = property.sold_price / property.lot_acres;
+      totalSoldPPA = totalSoldPPA + property.soldPPA;
+      console.log(property.soldPPA);
+    }
 
+    avgSoldPPA = totalSoldPPA / properties.length;
+    console.log(avgSoldPPA);
+  }
+
+  return avgSoldPPA;
+}
 
 async function createSubdivideQueryArray(myRow) {
-
   const metersinmile = 1609.34;
   const lon = Number(myRow.lon);
   const lat = Number(myRow.lat);
@@ -62,9 +79,9 @@ async function createSubdivideQueryArray(myRow) {
     let minAcreage = pieceSize * 0.75;
     let maxAcreage = pieceSize * 1.25;
     let radius = 30 * metersinmile; // 30 miles
-    queryArray.push(
-      geoQuery(lon, lat, radius, minAcreage, maxAcreage)
-    );
+    const myQuery = geoQuery(lon, lat, radius, minAcreage, maxAcreage);
+    console.log(JSON.stringify(myQuery));
+    queryArray.push(myQuery);
   }
   return queryArray;
 }
@@ -85,35 +102,25 @@ exports.handler = async function (event) {
     let myQueryArray = await createSubdivideQueryArray(myRow);
     for (let i = 0; i < myQueryArray.length; i++) {
       const myQuery = myQueryArray[i];
-      const myObjects = await fetchMongoDBDataAPI(myQuery, coll);
+      console.log("myQUERY", JSON.stringify(myQuery));
+      const myObjects = await fetchMongoDBData(myQuery, coll);
       console.log(myObjects);
+      // loop through and get sold PPA for this acreage range
+      //
+      const avgSoldPPA = await getSoldPPA(myObjects.documents);
+      console.log("myRow:", myRow);
+      if (avgSoldPPA > myRow.SOLD_PPA_AVG) {
+        myRow.SOLD_PPA_AVG = avgSoldPPA;
+        console.log("myQUERY", JSON.stringify(myQuery));
+        console.log("avgSoldPPA", avgSoldPPA);
+      }
     }
-
-    const propertyResults = myObjects.documents || [];
-    let totalPPA = 0;
-    let processedResults = [];
-
-    for (let property of propertyResults) {
-      const distance = cosineDistanceBetweenPoints(
-        Number(myRow.lat),
-        Number(myRow.lon),
-        Number(property.coordinate?.lat),
-        Number(property.coordinate?.lon)
-      );
-      property.DISTANCE = distance / 1609.34;
-      processedResults.push(addRowFromObject(property));
-      totalPPA += property.ppa || 0;
-    }
-
-    const avgPPA = propertyResults.length
-      ? totalPPA / propertyResults.length
-      : 0;
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        avgPPA,
-        properties: processedResults,
+        message: "Updated SOLD_PPA_AVG",
+        rowObj: myRow,
       }),
     };
   } catch (error) {

@@ -109,10 +109,13 @@ exports.handler = async function (event) {
       //
       const avgSoldPPA = await getSoldPPA(myObjects.documents);
       console.log("myRow:", myRow);
-      if (avgSoldPPA > myRow.SOLD_PPA_AVG) {
-        myRow.SOLD_PPA_AVG = avgSoldPPA;
+      if (avgSoldPPA > myRow.SOLD_PPA_AVG || myRow.SOLD_PPA_AVG === undefined) {
+        myRow.SOLD_PPA_AVG = Math.round(avgSoldPPA);
+        myRow.MIN_ACRES = myQuery.lot_acres.$gte;
+        myRow.MAX_ACRES = myQuery.lot_acres.$lte;
         console.log("myQUERY", JSON.stringify(myQuery));
         console.log("avgSoldPPA", avgSoldPPA);
+        console.log("myRow", myRow);
       }
     }
 

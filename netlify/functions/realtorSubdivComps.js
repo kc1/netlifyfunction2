@@ -135,6 +135,7 @@ exports.handler = async function (event) {
     // geoQuery(lon, lat, radius, minAcreage, maxAcreage, daysBack = 600)
 
     let myQueryArray = await createSubdivideQueryArray(myRow, daysBack, myRadiusInMiles);
+    let savedQuery ;
     // console.log("myQueryArray", JSON.stringify(myQueryArray));
     for (let i = 0; i < myQueryArray.length; i++) {
       const myQuery = myQueryArray[i];
@@ -157,6 +158,7 @@ exports.handler = async function (event) {
         myRow.MAX_ACRES = myQuery.lot_acres.$lte;
         myRow.PIECES = i + 2;
         myRow["ACRES/PIECE"] = myRow.lot_acres / myRow.PIECES;
+        savedQuery = myQuery;
         console.log("Updated myRow:");
       } else {
         console.log("No Update myRow:");
@@ -172,6 +174,7 @@ exports.handler = async function (event) {
       body: JSON.stringify({
         message: "Updated SOLD_PPA_AVG",
         rowObj: myRow,
+        savedQuery: savedQuery,
       }),
     };
   } catch (error) {

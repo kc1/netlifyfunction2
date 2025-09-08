@@ -74,7 +74,7 @@ async function getSoldPPA(properties) {
 
 async function testSubdivideQueryArray(myRow, daysBack, myRadius) {
 
-  const metersinmile = 1609.34;
+  // const metersinmile = 1609.34;
   const lon = Number(myRow.lon);
   const lat = Number(myRow.lat);
   let queryArray = [];
@@ -100,11 +100,11 @@ async function createSubdivideQueryArray(myRow, daysBack, myRadiusInMiles) {
     console.log("pieceSize:", pieceSize);
     let minAcreage = pieceSize * 0.75;
     let maxAcreage = pieceSize * 1.25;
-    let radius = myRadiusInMiles; // 30 miles
+    // let radius = myRadiusInMiles; // 30 miles
     const myQuery = geoQuery(
       lon,
       lat,
-      radius,
+      myRadiusInMiles,
       minAcreage,
       maxAcreage,
       daysBack

@@ -1,7 +1,7 @@
 const { json } = require("express");
 const fetch = require("node-fetch");
 
-function geoQuery(lon, lat, radius, minAcreage, maxAcreage, daysBack = 600) {
+function geoQuery(lon, lat, myRadiusInMiles, minAcreage, maxAcreage, daysBack) {
   const metersinmile = 1609.34;
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysBack);
@@ -10,7 +10,7 @@ function geoQuery(lon, lat, radius, minAcreage, maxAcreage, daysBack = 600) {
     location: {
       $nearSphere: {
         $geometry: { type: "Point", coordinates: [lon, lat] },
-        $maxDistance: radius * metersinmile,
+        $maxDistance: myRadiusInMiles * metersinmile,
       },
     },
     "location.coordinates": { $type: "array", $size: 2 },
@@ -63,23 +63,52 @@ async function getSoldPPA(properties) {
     }
 
     avgSoldPPA = totalSoldPPA / properties.length;
-    console.log(avgSoldPPA);
+    // console.log("avgSoldPPA inside getSoldPPA");
+    // console.log(avgSoldPPA);
   }
+  console.log("Final avgSoldPPA inside getSoldPPA");
+  console.log(avgSoldPPA);
 
   return avgSoldPPA;
 }
 
-async function createSubdivideQueryArray(myRow) {
+async function testSubdivideQueryArray(myRow, daysBack, myRadius) {
+
   const metersinmile = 1609.34;
+  const lon = Number(myRow.lon);
+  const lat = Number(myRow.lat);
+  let queryArray = [];
+  let pieceSize = myRow.lot_acres / myRow.PIECES;
+  console.log("pieceSize:", pieceSize);
+  let minAcreage = pieceSize * 0.75;
+  let maxAcreage = pieceSize * 1.25;
+  let radius = myRadius * metersinmile; // 30 miles
+  const myQuery = geoQuery(lon, lat, radius, minAcreage, maxAcreage, daysBack);
+  console.log(JSON.stringify(myQuery));
+  queryArray.push(myQuery);
+
+  return queryArray;
+}
+
+async function createSubdivideQueryArray(myRow, daysBack, myRadiusInMiles) {
+
   const lon = Number(myRow.lon);
   const lat = Number(myRow.lat);
   let queryArray = [];
   for (let i = 2; i <= 5; i++) {
     let pieceSize = myRow.lot_acres / i;
+    console.log("pieceSize:", pieceSize);
     let minAcreage = pieceSize * 0.75;
     let maxAcreage = pieceSize * 1.25;
-    let radius = 30 * metersinmile; // 30 miles
-    const myQuery = geoQuery(lon, lat, radius, minAcreage, maxAcreage);
+    let radius = myRadiusInMiles; // 30 miles
+    const myQuery = geoQuery(
+      lon,
+      lat,
+      radius,
+      minAcreage,
+      maxAcreage,
+      daysBack
+    );
     console.log(JSON.stringify(myQuery));
     queryArray.push(myQuery);
   }
@@ -89,8 +118,12 @@ async function createSubdivideQueryArray(myRow) {
 exports.handler = async function (event) {
   try {
     const body = JSON.parse(event.body);
-    const myRow = body.rowObj;
-    const coll = body.coll || "wisconsinSold";
+    const coll = body.coll || "wisconsinSold3";
+    const daysBack = body.daysBack || 400;
+    const myRadiusInMiles = body.radius || 30;
+    let myRow = body.rowObj;
+    myRow.SOLD_PPA_AVG = 0;
+    console.log("myRow input", myRow);
 
     if (!myRow.lon || !myRow.lat) {
       return {
@@ -99,26 +132,41 @@ exports.handler = async function (event) {
       };
     }
 
-    let myQueryArray = await createSubdivideQueryArray(myRow);
+    // geoQuery(lon, lat, radius, minAcreage, maxAcreage, daysBack = 600)
+
+    let myQueryArray = await createSubdivideQueryArray(myRow, daysBack, myRadiusInMiles);
+    // console.log("myQueryArray", JSON.stringify(myQueryArray));
     for (let i = 0; i < myQueryArray.length; i++) {
       const myQuery = myQueryArray[i];
       console.log("myQUERY", JSON.stringify(myQuery));
       const myObjects = await fetchMongoDBData(myQuery, coll);
-      console.log(myObjects);
+      console.log(
+        "Fetched",
+        myObjects.documents.length,
+        "records from " + coll
+      );
+      // console.log(myObjects);
+
       // loop through and get sold PPA for this acreage range
       //
       const avgSoldPPA = await getSoldPPA(myObjects.documents);
-      console.log("myRow:", myRow);
-      if (avgSoldPPA > myRow.SOLD_PPA_AVG || myRow.SOLD_PPA_AVG === undefined) {
+      // console.log("myRow:", myRow);
+      if (avgSoldPPA > myRow.SOLD_PPA_AVG || myRow.SOLD_PPA_AVG === 0) {
         myRow.SOLD_PPA_AVG = Math.round(avgSoldPPA);
         myRow.MIN_ACRES = myQuery.lot_acres.$gte;
         myRow.MAX_ACRES = myQuery.lot_acres.$lte;
-        console.log("myQUERY", JSON.stringify(myQuery));
-        console.log("avgSoldPPA", avgSoldPPA);
-        console.log("myRow", myRow);
+        myRow.PIECES = i + 2;
+        myRow["ACRES/PIECE"] = myRow.lot_acres / myRow.PIECES;
+        console.log("Updated myRow:");
+      } else {
+        console.log("No Update myRow:");
       }
+      console.log("myQUERY", JSON.stringify(myQuery));
+      console.log("myRow", myRow);
+      console.log("avgSoldPPA", avgSoldPPA);
     }
 
+    console.log("final myRow", myRow);
     return {
       statusCode: 200,
       body: JSON.stringify({

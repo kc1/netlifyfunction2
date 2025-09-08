@@ -136,6 +136,7 @@ exports.handler = async function (event) {
 
     let myQueryArray = await createSubdivideQueryArray(myRow, daysBack, myRadiusInMiles);
     let savedQuery ;
+    let queryResponseDocNum;
     // console.log("myQueryArray", JSON.stringify(myQueryArray));
     for (let i = 0; i < myQueryArray.length; i++) {
       const myQuery = myQueryArray[i];
@@ -159,6 +160,7 @@ exports.handler = async function (event) {
         myRow.PIECES = i + 2;
         myRow["ACRES/PIECE"] = myRow.lot_acres / myRow.PIECES;
         savedQuery = myQuery;
+        queryResponseDocNum = myObjects.documents.length;
         console.log("Updated myRow:");
       } else {
         console.log("No Update myRow:");
@@ -175,6 +177,7 @@ exports.handler = async function (event) {
         message: "Updated SOLD_PPA_AVG",
         rowObj: myRow,
         savedQuery: savedQuery,
+        queryResponseDocNum: queryResponseDocNum,
       }),
     };
   } catch (error) {

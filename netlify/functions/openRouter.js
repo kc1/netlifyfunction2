@@ -55,7 +55,7 @@ exports.handler = async (event, context) => {
   console.log("Hello from Netlify Function!");
 
   const objArr = JSON.parse(event.body);
-  console.log("Received body:", objArr);
+  console.log("Received array of spreadsheet row objects:", objArr);
 
   const waterText =
     "in the role of a real estate investor and land surveyor, can you estimate how much pf the selected lot is covered by water or in a flood zone?. In the response, please return the following: the full reasoning text ,followed by 2 empty newlines, followed by string ----------- , followed by 2 newlines, followed by a json template that looks like: {estimated percentage flood zone: <>, estimated percentage ground water: <>, total estimated percentage: <>}";
@@ -63,6 +63,8 @@ exports.handler = async (event, context) => {
   const contourText =
     "in the role of a real estate investor and land surveyor, is the majority of the selected lot hilly or relatively flat and buildable? In the response, please return the following: the full reasoning text, followed by 2 empty newlines, followed by a string ----------- , followed by 2 newlines, followed by a json template that looks like: {estimated percentage of lot that is hilly: <>, estimated percentage of lot that is flat: <>}";
 
+  const roadText =
+    "in the role of a real estate investor and land surveyor, How many roads border the property in blue? In the response, please return the following: the full reasoning text, followed by 2 empty newlines, followed by a string ----------- , followed by 2 newlines, followed by a json template that looks like: {'roadNumberInteger': <>}";
 
   const text = "What is in this image?";
   // waterLink = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
@@ -70,8 +72,8 @@ exports.handler = async (event, context) => {
 
   let promises = [];
   let myObjs = [];
-  let waterFile, contourFile;
-  for (let i = 0;i < objArr.length; i++) {
+  let waterFile, contourFile, roadFile;
+  for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
     if (obj.WaterURL && !obj.WaterResponse) {
       waterFile = obj.WaterURL;
@@ -87,43 +89,43 @@ exports.handler = async (event, context) => {
       obj.ContourResponse = "PENDING";
       myObjs.push(obj);
     }
-
-    // Await the async calls
-    /*     const waterResponse = await openRouterApiRequest(waterFile, waterText);
-    const contourResponse = await openRouterApiRequest(
-      contourFile,
-      contourText
-    );
- */
-
-    // obj.WaterResponse = waterResponse;
-    // obj.ContourResponse = contourResponse;
-    // results.push(obj);
+    if (obj.ContourURL && !obj.RoadResponse) { // Note: using ContourURL for Road as well, adjust if needed
+      roadFile = obj.ContourURL;
+      console.log("Road File: " + roadFile);
+      promises.push(openRouterApiRequest(roadFile, roadText));
+      obj.RoadResponse = "PENDING";
+      myObjs.push(obj);
+    }
   }
 
   console.log("Promises:", promises);
 
   const results = await Promise.allSettled(promises);
   console.log("Results:", results);
-  
-  
+
   let output = [];
-  for (let i = 0;i < myObjs.length; i++) {
+  for (let i = 0; i < myObjs.length; i++) {
     const myObj = myObjs[i];
     const result = results[i];
     if (result.status === "fulfilled") {
       if (myObj.WaterResponse === "PENDING") {
         myObj.WaterResponse = result.value;
-      }else if (myObj.ContourResponse === "PENDING") {
+      } else if (myObj.ContourResponse === "PENDING") {
         myObj.ContourResponse = result.value;
+      }else if (myObj.RoadResponse === "PENDING") {
+        myObj.RoadResponse = result.value;
       }
+
     } else if (result.status === "rejected") {
       if (myObj.WaterResponse === "PENDING") {
         myObj.WaterResponse = "Error: " + result.reason.message;
       } else if (myObj.ContourResponse === "PENDING") {
         myObj.ContourResponse = "Error: " + result.reason.message;
+      } else if (myObj.RoadResponse === "PENDING") {
+        myObj.RoadResponse = "Error: " + result.reason.message;
       }
-    }    
+
+    }
     output.push(myObj);
   }
 
@@ -137,4 +139,4 @@ exports.handler = async (event, context) => {
       results: JSON.stringify(output),
     }),
   };
-};
+}

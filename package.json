@@ -35,7 +35,8 @@
     "node-fetch": "^2.6.1",
     "node-persist": "^4.0.3",
     "qs": "^6.13.1",
-    "unix-timestamp": "^1.0.2"
+    "unix-timestamp": "^1.0.2",
+    "zlib": "^1.0.5"
   },
   "devDependencies": {
     "@sparticuz/chromium": "^109.0.1",

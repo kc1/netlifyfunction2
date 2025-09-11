@@ -89,7 +89,8 @@ exports.handler = async (event, context) => {
       obj.ContourResponse = "PENDING";
       myObjs.push(obj);
     }
-    if (obj.ContourURL && !obj.RoadResponse) { // Note: using ContourURL for Road as well, adjust if needed
+    if (obj.ContourURL && !obj.RoadResponse) {
+      // Note: using ContourURL for Road as well, adjust if needed
       roadFile = obj.ContourURL;
       console.log("Road File: " + roadFile);
       promises.push(openRouterApiRequest(roadFile, roadText));
@@ -112,10 +113,9 @@ exports.handler = async (event, context) => {
         myObj.WaterResponse = result.value;
       } else if (myObj.ContourResponse === "PENDING") {
         myObj.ContourResponse = result.value;
-      }else if (myObj.RoadResponse === "PENDING") {
+      } else if (myObj.RoadResponse === "PENDING") {
         myObj.RoadResponse = result.value;
       }
-
     } else if (result.status === "rejected") {
       if (myObj.WaterResponse === "PENDING") {
         myObj.WaterResponse = "Error: " + result.reason.message;
@@ -124,7 +124,6 @@ exports.handler = async (event, context) => {
       } else if (myObj.RoadResponse === "PENDING") {
         myObj.RoadResponse = "Error: " + result.reason.message;
       }
-
     }
     output.push(myObj);
   }
@@ -139,4 +138,4 @@ exports.handler = async (event, context) => {
       results: JSON.stringify(output),
     }),
   };
-}
+};

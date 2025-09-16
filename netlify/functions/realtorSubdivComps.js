@@ -73,7 +73,6 @@ async function getSoldPPA(properties) {
 }
 
 async function testSubdivideQueryArray(myRow, daysBack, myRadius) {
-
   // const metersinmile = 1609.34;
   const lon = Number(myRow.lon);
   const lat = Number(myRow.lat);
@@ -91,7 +90,6 @@ async function testSubdivideQueryArray(myRow, daysBack, myRadius) {
 }
 
 async function createSubdivideQueryArray(myRow, daysBack, myRadiusInMiles) {
-
   const lon = Number(myRow.lon);
   const lat = Number(myRow.lat);
   let queryArray = [];
@@ -134,9 +132,14 @@ exports.handler = async function (event) {
 
     // geoQuery(lon, lat, radius, minAcreage, maxAcreage, daysBack = 600)
 
-    let myQueryArray = await createSubdivideQueryArray(myRow, daysBack, myRadiusInMiles);
-    let savedQuery ;
+    let myQueryArray = await createSubdivideQueryArray(
+      myRow,
+      daysBack,
+      myRadiusInMiles
+    );
+    let savedQuery;
     let queryResponseDocNum;
+    let arrPiecePPA = [];
     // console.log("myQueryArray", JSON.stringify(myQueryArray));
     for (let i = 0; i < myQueryArray.length; i++) {
       const myQuery = myQueryArray[i];
@@ -147,11 +150,17 @@ exports.handler = async function (event) {
         myObjects.documents.length,
         "records from " + coll
       );
-      // console.log(myObjects);
 
-      // loop through and get sold PPA for this acreage range
-      //
       const avgSoldPPA = await getSoldPPA(myObjects.documents);
+
+      myRow["ACRES/PIECE"] = myRow.lot_acres / myRow.PIECES;
+      savedQuery = myQuery;
+      queryResponseDocNum = myObjects.documents.length;
+      const avgSoldPPAstr = (i+2).toString()+":"+Math.round(avgSoldPPA).toString() + "(" + queryResponseDocNum.toString() + ")"
+      console.log("avgSoldPPAstr");
+      console.log(avgSoldPPAstr);
+      arrPiecePPA.push(avgSoldPPAstr);
+
       // console.log("myRow:", myRow);
       if (avgSoldPPA > myRow.SOLD_PPA_AVG || myRow.SOLD_PPA_AVG === 0) {
         myRow.SOLD_PPA_AVG = Math.round(avgSoldPPA);
@@ -171,6 +180,9 @@ exports.handler = async function (event) {
     }
 
     console.log("final myRow", myRow);
+    console.log("arrPiecePPA", arrPiecePPA);
+    const arrPiecePPAstr = arrPiecePPA.join("-");
+    console.log("arrPiecePPAstr", arrPiecePPAstr);
     return {
       statusCode: 200,
       body: JSON.stringify({
@@ -178,6 +190,7 @@ exports.handler = async function (event) {
         rowObj: myRow,
         savedQuery: savedQuery,
         queryResponseDocNum: queryResponseDocNum,
+        arrPiecePPAstr: arrPiecePPAstr,
       }),
     };
   } catch (error) {

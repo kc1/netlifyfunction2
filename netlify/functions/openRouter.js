@@ -58,13 +58,13 @@ exports.handler = async (event, context) => {
   console.log("Received array of spreadsheet row objects:", objArr);
 
   const waterText =
-    'in the role of a real estate investor and land surveyor, can you estimate how much pf the selected lot is covered by water or in a flood zone?. In the response, please return the following: the full reasoning text ,followed by 2 empty newlines, followed by string ----------- , followed by 2 newlines, followed by a json template that looks like: {"estimated percentage flood zone": <integer only>, "estimated percentage ground water": <integer only>, "total estimated percentage": <integer only>}"; make sure its valid JSON
+    'in the role of a real estate investor and land surveyor, can you estimate how much pf the selected lot is covered by water or in a flood zone?. In the response, please return the following: the full reasoning text ,followed by 2 empty newlines, followed by string ----------- , followed by 2 newlines, followed by a json template that looks like: {"estimated percentage flood zone": <integer only>, "estimated percentage ground water": <integer only>, "total estimated percentage": <integer only>}"; make sure its valid JSON';
 
   const contourText =
     'in the role of a real estate investor and land surveyor, is the majority of the selected lot hilly or relatively flat and buildable? In the response, please return the following: the full reasoning text, followed by 2 empty newlines, followed by a string ----------- , followed by 2 newlines, followed by a json template that looks like: {"estimated percentage of lot that is hilly": <integer only>, "estimated percentage of lot that is flat": <integer only>, "estimated percentage of lot that is buildable": <integer only>}"; make sure its valid JSON';
 
   const roadText =
-    'in the role of a real estate investor and land surveyor, How many roads border the property in blue? In the response, please return the following: the full reasoning text, followed by 2 empty newlines, followed by a string ----------- , followed by 2 newlines, followed by a json template that looks like: {"roadNumberInteger": <integer only>}; make sure its valid JSON';
+    'in the role of a real estate investor and land surveyor, How many roads border the property in blue? In the response, please return the following: the full reasoning text, followed by 2 empty newlines, followed by a string ----------- , followed by 2 newlines, followed by a json template that looks like: {"roadNumberInteger": <integer only>} make sure its valid JSON';
 
   const text = "What is in this image?";
   // waterLink = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"

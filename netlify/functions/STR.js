@@ -70,9 +70,9 @@ exports.handler = async function (event) {
   try {
     const body = JSON.parse(event.body || "{}");
     console.log("body: ", body);
-    const soldColl = body.payload.soldColl;
-    const fsColl = body.payload.fsColl;
-    const rows = body.payload.rows || [];
+    const soldColl = body.soldColl;
+    const fsColl = body.fsColl;
+    const rows = body.rows || [];
 
     if (!soldColl || !fsColl) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing collection names" }) };

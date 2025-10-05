@@ -69,9 +69,9 @@ async function updateRows(forSaleCollName, soldCollName, selectedRows) {
 exports.handler = async function (event) {
   try {
     const body = JSON.parse(event.body || "{}");
-    const soldColl = body.soldColl;
-    const fsColl = body.fsColl;
-    const rows = body.rows || [];
+    const soldColl = body.payloadsoldColl;
+    const fsColl = body.payload.fsColl;
+    const rows = body.payload.rows || [];
 
     if (!soldColl || !fsColl) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing collection names" }) };

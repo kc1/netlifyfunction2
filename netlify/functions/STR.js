@@ -70,9 +70,12 @@ exports.handler = async function (event) {
   try {
     const body = JSON.parse(event.body || "{}");
     console.log("body: ", body);
-    const soldColl = body.soldColl;
-    const fsColl = body.fsColl;
-    const rows = body.rows || [];
+    
+    // Handle Apps Script format where data is nested in payload
+    const data = body.payload || body;
+    const soldColl = data.soldColl;
+    const fsColl = data.fsColl;
+    const rows = data.rows || [];
 
     if (!soldColl || !fsColl) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing collection names" }) };

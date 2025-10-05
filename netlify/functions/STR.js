@@ -83,6 +83,8 @@ exports.handler = async function (event) {
 
     const updatedRows = await updateRows(fsColl, soldColl, rows);
 
+    console.log("updatedRows: ", updatedRows);
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: updatedRows }),

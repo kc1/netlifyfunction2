@@ -69,7 +69,7 @@ async function updateRows(forSaleCollName, soldCollName, selectedRows) {
 exports.handler = async function (event) {
   try {
     const body = JSON.parse(event.body || "{}");
-    const soldColl = body.payloadsoldColl;
+    const soldColl = body.payload.soldColl;
     const fsColl = body.payload.fsColl;
     const rows = body.payload.rows || [];
 

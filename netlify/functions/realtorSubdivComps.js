@@ -1,5 +1,7 @@
-const { json } = require("express");
-const fetch = require("node-fetch");
+require("dotenv").config();
+const { MongoClient } = require("mongodb");
+
+const MONGO_URI = process.env.MONGODB_URI;
 
 function geoQuery(lon, lat, myRadiusInMiles, minAcreage, maxAcreage, daysBack) {
   const metersinmile = 1609.34;
@@ -22,33 +24,24 @@ function geoQuery(lon, lat, myRadiusInMiles, minAcreage, maxAcreage, daysBack) {
 }
 
 async function fetchMongoDBData(filterObj, coll) {
-  const url =
-    "https://us-east-1.aws.data.mongodb-api.com/app/data-wygci/endpoint/data/v1/action/find";
-  const apiKey =
-    "1GxuC9AAuc77xJklnS1PSHVKhZUt3QkcOaqdSYRqoeQVrSnf8jtGtLO3zGlNfm4T";
-  const authToken =
-    "1GxuC9AAuc77xJklnS1PSHVKhZUt3QkcOaqdSYRqoeQVrSnf8jtGtLO3zGlNfm4T";
-  const headers = {
-    "Content-Type": "application/json",
-    "Access-Control-Request-Headers": "*",
-    "api-key": apiKey,
-    Authorization: authToken,
-  };
-  const payload = {
-    collection: coll,
-    database: "mydata",
-    dataSource: "Cluster0",
-    filter: filterObj,
-    projection: {},
-    sort: { list_date: -1 },
-  };
-  const response = await fetch(url, {
-    method: "POST",
-    headers: headers,
-    body: JSON.stringify(payload),
-  });
-  const result = await response.json();
-  return result;
+  const client = new MongoClient(MONGO_URI);
+  
+  try {
+    await client.connect();
+    const database = client.db("mydata");
+    const collection = database.collection(coll);
+    
+    const documents = await collection
+      .find(filterObj)
+      .sort({ list_date: -1 })
+      .toArray();
+    
+    return { documents };
+  } catch (error) {
+    throw new Error(`MongoDB error: ${error.message}`);
+  } finally {
+    await client.close();
+  }
 }
 
 async function getSoldPPA(properties) {
@@ -73,7 +66,7 @@ async function getSoldPPA(properties) {
 }
 
 async function testSubdivideQueryArray(myRow, daysBack, myRadius) {
-  // const metersinmile = 1609.34;
+  const metersinmile = 1609.34;
   const lon = Number(myRow.lon);
   const lat = Number(myRow.lat);
   let queryArray = [];

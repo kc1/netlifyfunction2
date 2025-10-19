@@ -1,51 +1,53 @@
 require("dotenv").config();
 const { MongoClient } = require("mongodb");
-var murl = process.env.MONGODB_URI;
-const client = new MongoClient(murl);
-client.connect();
-const database = client.db("mydata");
-let collection = database.collection("AgentsContacted");
-let firstNum = 0;
-let lastNum = 3;
-let myArgs = process.argv.slice(2);
-console.log(myArgs);
 
-async function upsertToBucket(coll, objArr) {
-  for (let i = 0; i < objArr.length; i++) {
-    const obj = objArr[i];
-    // Use listing_id as the unique identifier in the filter.
+const MONGO_URI = process.env.MONGODB_URI;
+const DB_NAME = process.env.MONGODB_DB || "mydata";
+
+async function upsertToBucket(collection, objArr) {
+  if (!Array.isArray(objArr)) throw new Error("objArr must be an array");
+  const results = [];
+  for (const obj of objArr) {
     const filter = { listing_id: obj.listing_id };
     try {
-      const result = await coll.updateOne(
-        filter,
-        { $set: obj },
-        { upsert: true }
-      );
-      if (result.upsertedCount > 0) {
-        console.log(
-          `Upsert created a new listing with id: ${result.upsertedId._id}`
-        );
-      } else if (result.modifiedCount > 0) {
-        console.log(`Updated listing with listing_id: ${obj.listing_id}`);
-      } else {
-        console.log(`No changes made for listing_id: ${obj.listing_id}`);
-      }
-    } catch (error) {
-      console.log(error);
+      const res = await collection.updateOne(filter, { $set: obj }, { upsert: true });
+      results.push({ listing_id: obj.listing_id, upsertedCount: res.upsertedCount || 0, modifiedCount: res.modifiedCount || 0 });
+    } catch (err) {
+      results.push({ listing_id: obj.listing_id, error: err.toString() });
     }
   }
+  return results;
 }
 
 exports.handler = async function (event, context) {
-  const bodyObj = JSON.parse(event.body);
-  console.log(bodyObj);
+  // validate input
+  let bodyObj;
+  try {
+    bodyObj = event.body ? JSON.parse(event.body) : {};
+  } catch (err) {
+    return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON body" }) };
+  }
 
-  await upsertToBucket(bodyObj.coll, bodyObj.myObjArray);
+  const collName = bodyObj.coll || "AgentsContacted";
+  const myObjArray = Array.isArray(bodyObj.myObjArray) ? bodyObj.myObjArray : [];
+  if (myObjArray.length === 0) {
+    return { statusCode: 400, body: JSON.stringify({ error: "myObjArray must be a non-empty array" }) };
+  }
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: myObjArray,
-    }),
-  };
+  if (!MONGO_URI) return { statusCode: 500, body: JSON.stringify({ error: "Missing MONGODB_URI in environment" }) };
+
+  const client = new MongoClient(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+  try {
+    await client.connect();
+    const db = client.db(DB_NAME);
+    const collection = db.collection(collName);
+
+    const results = await upsertToBucket(collection, myObjArray);
+
+    return { statusCode: 200, body: JSON.stringify({ message: "Upsert complete", results }) };
+  } catch (err) {
+    return { statusCode: 500, body: JSON.stringify({ error: err.toString() }) };
+  } finally {
+    try { await client.close(); } catch (e) { /* ignore */ }
+  }
 };

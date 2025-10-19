@@ -37,10 +37,10 @@ async function upsertToBucket(coll, objArr) {
 }
 
 exports.handler = async function (event, context) {
-  const myObjArray = JSON.parse(event.body);
-  console.log(myObjArray);
+  const bodyObj = JSON.parse(event.body);
+  console.log(bodyObj);
 
-  await upsertToBucket(collection, myObjArray);
+  await upsertToBucket(bodyObj.coll, bodyObj.myObjArray);
 
   return {
     statusCode: 200,

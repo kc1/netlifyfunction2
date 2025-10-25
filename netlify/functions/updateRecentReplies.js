@@ -8,12 +8,12 @@ async function upsertToBucket(collection, objArr) {
   if (!Array.isArray(objArr)) throw new Error("objArr must be an array");
   const results = [];
   for (const obj of objArr) {
-    const filter = { listing_id: obj.listing_id };
+    const filter = { threadId: obj.threadId };
     try {
       const res = await collection.updateOne(filter, { $set: obj }, { upsert: true });
-      results.push({ listing_id: obj.listing_id, upsertedCount: res.upsertedCount || 0, modifiedCount: res.modifiedCount || 0 });
+      results.push({ threadId: obj.threadId, upsertedCount: res.upsertedCount || 0, modifiedCount: res.modifiedCount || 0 });
     } catch (err) {
-      results.push({ listing_id: obj.listing_id, error: err.toString() });
+      results.push({ threadId: obj.threadId, error: err.toString() });
     }
   }
   return results;
@@ -28,7 +28,7 @@ exports.handler = async function (event, context) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON body" }) };
   }
 
-  const collName = bodyObj.coll || "RecentReplies";
+  const collName = bodyObj.coll || "RecentResponses";
   const myObjArray = Array.isArray(bodyObj.myObjArray) ? bodyObj.myObjArray : [];
   if (myObjArray.length === 0) {
     return { statusCode: 400, body: JSON.stringify({ error: "myObjArray must be a non-empty array" }) };

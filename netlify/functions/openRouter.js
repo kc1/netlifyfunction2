@@ -76,21 +76,22 @@ exports.handler = async (event, context) => {
   let waterFile, contourFile, roadFile;
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
-    if (obj.WaterURL && !obj.WaterResponse) {
+    if (obj.WaterURL && obj.WaterResponse.includes(["","{}"])) {
       waterFile = obj.WaterURL;
       console.log("Water File: " + waterFile);
       promises.push(openRouterApiRequest(waterFile, waterText));
       obj.WaterResponse = "PENDING";
       myObjs.push(obj);
     }
-    if (obj.ContourURL && !obj.ContourResponse) {
+    if (obj.ContourURL && obj.ContourResponse.includes(["","{}"])) {
+      
       contourFile = obj.ContourURL;
       console.log("Contour File: " + contourFile);
       promises.push(openRouterApiRequest(contourFile, contourText));
       obj.ContourResponse = "PENDING";
       myObjs.push(obj);
     }
-    if (obj.ContourURL && !obj.RoadResponse) {
+    if (obj.ContourURL && obj.RoadResponse.includes(["","{}"])) {
       // Note: using ContourURL for Road as well, adjust if needed
       roadFile = obj.ContourURL;
       console.log("Road File: " + roadFile);

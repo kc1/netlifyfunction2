@@ -59,7 +59,7 @@ exports.handler = async (event, context) => {
   console.log("Received array of spreadsheet row objects:", objArr);
 
   const waterText =
-    'in the role of a real estate investor and land surveyor, can you estimate how much pf the selected lot is covered by water or in a flood zone?. You can use the legend on the left of the image. Please be aware that flood zones or surface water usually have curvilinear or rounded borders, and have some blue, or blue/green, but are not totally green in color. In the response, please return the following: the full reasoning text ,followed by 2 empty newlines, followed by string ----------- , followed by 2 newlines, followed by a json template that looks like: {"estimated percentage flood zone": <integer only>, "estimated percentage ground water": <integer only>, "total estimated percentage": <integer only>}"; make sure its valid JSON';
+    'in the role of a real estate investor and land surveyor, Please find the selected lot within the provided image. The selected lot is contained by a thin bright blue line. It also has a central mark with the white letters "id" on a black background followed by a red period. After confirming the boundaries of the selected lot, can you estimate how much of the selected lot is covered by water or in a flood zone? You can use the legend on the left of the image to see some of the colors of areas of ground water or flood zone. Please be aware that flood zones or surface water usually have curvilinear or rounded borders, and have some blue, or blue/green, but are not totally green in color. These are noted to have a thin black line as a border of the same thickness as the bright blue boundary of the selected lot. In the response, please return the following: the full reasoning text ,followed by 2 empty newlines, followed by string ----------- , followed by 2 newlines, followed by a json template that looks like: {"estimated percentage flood zone": <integer only>, "estimated percentage ground water": <integer only>, "total estimated percentage": <integer only>}"; make sure its valid JSON';
 
   const contourText =
     'in the role of a real estate investor and land surveyor, is the majority of the selected lot hilly or relatively flat and buildable? In the response, please return the following: the full reasoning text, followed by 2 empty newlines, followed by a string ----------- , followed by 2 newlines, followed by a json template that looks like: {"estimated percentage of lot that is hilly": <integer only>, "estimated percentage of lot that is flat": <integer only>, "estimated percentage of lot that is buildable": <integer only>}"; make sure its valid JSON';
@@ -76,21 +76,21 @@ exports.handler = async (event, context) => {
   let waterFile, contourFile, roadFile;
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
-    if (obj.WaterURL && ['', '{}'].includes(obj.RoadResponse)) {
+    if (obj.WaterURL && ["", "{}"].includes(obj.RoadResponse)) {
       waterFile = obj.WaterURL;
       console.log("Water File: " + waterFile);
       promises.push(openRouterApiRequest(waterFile, waterText));
       obj.WaterResponse = "PENDING";
       myObjs.push(obj);
     }
-    if (obj.ContourURL && ['', '{}'].includes(obj.ContourResponse)) {
+    if (obj.ContourURL && ["", "{}"].includes(obj.ContourResponse)) {
       contourFile = obj.ContourURL;
       console.log("Contour File: " + contourFile);
       promises.push(openRouterApiRequest(contourFile, contourText));
       obj.ContourResponse = "PENDING";
       myObjs.push(obj);
     }
-    if (obj.ContourURL && ['', '{}'].includes(obj.RoadResponse)) {
+    if (obj.ContourURL && ["", "{}"].includes(obj.RoadResponse)) {
       // Note: using ContourURL for Road as well, adjust if needed
       roadFile = obj.ContourURL;
       console.log("Road File: " + roadFile);

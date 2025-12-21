@@ -71,30 +71,23 @@ exports.handler = async (event, context) => {
   console.log("Context:", context);
 
   const bodyObj = JSON.parse(event.body);
-  const objArr = JSON.parse(bodyObj.payload);
-  console.log("Received array of spreadsheet row objects:", objArr);
+  // const objArr = JSON.parse(bodyObj.payload);
+  console.log("Received array of spreadsheet row objects:", bodyObj);
 
   const prompt = (county, state) =>
     `in ${county} county , ${state} , can you tell me if an exempt or minor subdivision is possible, and if so what property sizes for the subdivided lots. can also you return minimum road frontage from the subdivided lot. Can you also include minimum buildable area and minimum size of subdivided lot.`;
 
   let promises = [];
-  for (let i = 0; i < objArr.length; i++) {
-    const obj = objArr[i];
-    const myPrompt = prompt(obj, "Wisconsin");
+  for (let i = 0; i < bodyObj.length; i++) {
+    const myPrompt = prompt(bodyObj[i].county, "Wisconsin");
     promises.push(openRouterApiRequest2(myPrompt));
   }
-
-  console.log("Promises:", promises);
-
   const results = await Promise.allSettled(promises);
   console.log("Results:", results);
-
   let output = [];
   for (let i = 0; i < results.length; i++) {
-    const result = results[i];
-    output.push({county: objArr[i], result: result.value});
+    output.push({county: bodyObj[i], result: results[i].value});
   }
-
   return {
     statusCode: 200,
     headers: {

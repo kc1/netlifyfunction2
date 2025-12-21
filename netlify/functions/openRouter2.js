@@ -79,7 +79,7 @@ exports.handler = async (event, context) => {
 
   let promises = [];
   for (let i = 0; i < bodyObj.length; i++) {
-    const myPrompt = prompt(bodyObj[i].county, "Wisconsin");
+    const myPrompt = prompt(bodyObj[i], "Wisconsin");
     promises.push(openRouterApiRequest2(myPrompt));
   }
   const results = await Promise.allSettled(promises);

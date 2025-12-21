@@ -86,7 +86,8 @@ exports.handler = async (event, context) => {
   console.log("Results:", results);
   let output = [];
   for (let i = 0; i < results.length; i++) {
-    output.push({county: bodyObj[i], result: results[i].value});
+    const countyMarkdown = `<span style="font-size: 18pt"><u><strong>${bodyObj[i]}</strong></u></span>\n\n`;
+    output.push({county: countyMarkdown, result: results[i].value});
   }
   return {
     statusCode: 200,

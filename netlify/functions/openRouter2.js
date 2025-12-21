@@ -75,7 +75,7 @@ exports.handler = async (event, context) => {
   console.log("Received array of spreadsheet row objects:", bodyObj);
 
   const prompt = (county, state) =>
-    `in ${county} county , ${state} , can you tell me if an exempt or minor subdivision is possible, and if so what property sizes for the subdivided lots. can also you return minimum road frontage from the subdivided lot. Can you also include minimum buildable area and minimum size of subdivided lot.`;
+    `in ${county} county , ${state} , can you tell me if an exempt or minor subdivision is possible, and if so what property sizes for the subdivided lots. can also you return minimum road frontage from the subdivided lot. Can you also include minimum buildable area and minimum size of subdivided lot.Finally can you finish by putting links to the relevant county ordinances and subdivision regulations.`;
 
   let promises = [];
   for (let i = 0; i < bodyObj.length; i++) {

@@ -67,6 +67,8 @@ async function openRouterApiRequest2(combinedPrompt) {
 
 exports.handler = async (event, context) => {
   console.log("Hello from Netlify Function!");
+  console.log("Event:", event);
+  console.log("Context:", context);
 
   const bodyObj = JSON.parse(event.body);
   const objArr = JSON.parse(bodyObj.payload);

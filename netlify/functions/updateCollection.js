@@ -76,83 +76,107 @@ async function addFields(obj) {
   // Build the AAlink if the permalink is available.
   const AAlink = obj.permalink
     ? `https://www.realtor.com/realestateandhomes-detail/${obj.permalink}?from=srp`
-    : null;
+    : obj.AAlink || null;
 
-  // Process flags: join keys with truthy values.
-  let flags = null;
-  if (obj.flags) {
-    const flagKeys = Object.keys(obj.flags);
-    flags = flagKeys.filter(key => obj.flags[key]).join(",");
+  // Process flags: join keys with truthy values or use existing string.
+  let flags = obj.flags;
+  if (typeof flags === 'object' && flags !== null) {
+    const flagKeys = Object.keys(flags);
+    flags = flagKeys.filter(key => flags[key]).join(",");
+  }
+  // If flags is already a string, keep it as is
+  if (typeof flags !== 'string') {
+    flags = null;
   }
 
   // Initialize lat and lon to null.
   let lat = null, lon = null;
-  // Extract coordinates (lat, lon) from the nested object if available.
-  if (
+  
+  // Try to extract coordinates from the new structure (top-level lat/lon)
+  if (typeof obj.lat === "number" && typeof obj.lon === "number") {
+    lat = obj.lat;
+    lon = obj.lon;
+  }
+  // Or from the old nested structure
+  else if (
     obj.location &&
     obj.location.address &&
     obj.location.address.coordinate &&
     typeof obj.location.address.coordinate.lat === "number" &&
     typeof obj.location.address.coordinate.lon === "number"
   ) {
-    // Assign to our variables.
     lat = obj.location.address.coordinate.lat;
     lon = obj.location.address.coordinate.lon;
-    // Optionally, you might set a point on the original location
-    obj.location.point = {
-      type: "Point",
-      coordinates: [lon, lat] // Note: this is typical GeoJSON order (lon, lat)
-    };
+  }
+  // Or from location with coordinates array (GeoJSON format)
+  else if (
+    obj.location &&
+    obj.location.coordinates &&
+    Array.isArray(obj.location.coordinates) &&
+    obj.location.coordinates.length === 2
+  ) {
+    lon = obj.location.coordinates[0];
+    lat = obj.location.coordinates[1];
   }
 
-  // Extract address and state from location.address.
-  const address =
-    obj.location && obj.location.address ? obj.location.address.line : null;
-  const state =
-    obj.location && obj.location.address ? obj.location.address.state : null;
+  // Extract address and state - try new structure first, then old structure
+  let address = obj.address || null;
+  if (!address && obj.location && obj.location.address) {
+    address = obj.location.address.line || null;
+  }
 
-  // Extract county from obj.location.county.
-  const county =
-    obj.location && obj.location.county ? obj.location.county.name : null;
+  let state = obj.state || null;
+  if (!state && obj.location && obj.location.address) {
+    state = obj.location.address.state || null;
+  }
+
+  // Extract county - try new structure first, then old structure
+  let county = obj.county || null;
+  if (!county && obj.location && obj.location.county) {
+    county = obj.location.county.name || null;
+  }
 
   // Compute lot_acres from description.lot_sqft if available.
   const lot_sqft =
     obj.description && obj.description.lot_sqft
       ? obj.description.lot_sqft
       : null;
-  const lot_acres = lot_sqft ? lot_sqft / 43560 : null;
+  const lot_acres = lot_sqft ? lot_sqft / 43560 : (obj.lot_acres || null);
 
-  // Add price from list_price.
-  const price = obj.list_price || null;
+  // Add price - try list_price first, then price field
+  const price = obj.list_price || obj.price || null;
+
+  // Extract sold_price from description or top level
+  const sold_price = (obj.description && obj.description.sold_price) || obj.sold_price || null;
+
+  // Extract sold_date from description or top level
+  const sold_date = (obj.description && obj.description.sold_date) || obj.sold_date || null;
 
   // Calculate price per acre (ppa) if lot_acres and price are available.
   const ppa = (price && lot_acres && lot_acres > 0)
     ? price / lot_acres
-    : null;
+    : (obj.ppa || null);
 
   // Set updatedAt to the current date.
   const updatedAt = new Date();
 
   // Extract agent details from the advertisers array (using the first advertiser).
-  const AgentName =
-    obj.advertisers &&
-    obj.advertisers.length > 0 &&
-    obj.advertisers[0].name
-      ? obj.advertisers[0].name
-      : null;
-  const AgentEmail =
-    obj.advertisers &&
-    obj.advertisers.length > 0 &&
-    obj.advertisers[0].email
-      ? obj.advertisers[0].email
-      : null;
-  const AgentPhone =
-    obj.advertisers &&
-    obj.advertisers.length > 0 &&
-    obj.advertisers[0].phones &&
-    obj.advertisers[0].phones.length > 0
-      ? obj.advertisers[0].phones[0].number
-      : null;
+  let AgentName = obj.AgentName || null;
+  let AgentEmail = obj.AgentEmail || null;
+  let AgentPhone = obj.AgentPhone || null;
+
+  // If not already present, try extracting from advertisers array
+  if (!AgentName || !AgentEmail || !AgentPhone) {
+    if (obj.advertisers && obj.advertisers.length > 0) {
+      AgentName = AgentName || (obj.advertisers[0].name || null);
+      AgentEmail = AgentEmail || (obj.advertisers[0].email || null);
+      AgentPhone = AgentPhone || (
+        obj.advertisers[0].phones && obj.advertisers[0].phones.length > 0
+          ? obj.advertisers[0].phones[0].number || null
+          : null
+      );
+    }
+  }
 
   // Build the new object with merged fields.
   let newObj = {
@@ -168,6 +192,8 @@ async function addFields(obj) {
     county,
     lot_acres,
     price,
+    sold_price,
+    sold_date,
     ppa,
     updatedAt,
     AgentName,
@@ -175,8 +201,10 @@ async function addFields(obj) {
     AgentPhone,
   };
 
-  // Delete the original location property.
-  delete newObj.location;
+  // Remove old location property if it exists
+  if (newObj.location && typeof newObj.location === 'object') {
+    delete newObj.location;
+  }
 
   // Create a new location property with type 'Point'
   // and coordinates array with index 0 = lon and index 1 = lat.

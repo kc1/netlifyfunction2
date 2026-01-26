@@ -5,8 +5,15 @@ const MONGO_URI = process.env.MONGODB_URI;
 
 function geoQuery(lon, lat, myRadiusInMiles, minAcreage, maxAcreage, daysBack) {
   const metersinmile = 1609.34;
+
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+
+  // Build "YYYY-MM-DD" string to match stored sold_date
+  const year = cutoffDate.getUTCFullYear();
+  const month = String(cutoffDate.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(cutoffDate.getUTCDate()).padStart(2, "0");
+  const cutoffStr = `${year}-${month}-${day}`;
 
   return {
     location: {
@@ -15,13 +22,11 @@ function geoQuery(lon, lat, myRadiusInMiles, minAcreage, maxAcreage, daysBack) {
         $maxDistance: myRadiusInMiles * metersinmile,
       },
     },
-    "location.coordinates": { $type: "array", $size: 2 },
-    "location.coordinates.0": { $type: "number", $ne: null },
-    "location.coordinates.1": { $type: "number", $ne: null },
     lot_acres: { $gte: minAcreage, $lte: maxAcreage },
-    sold_date: { $gte: cutoffDate.toISOString() },
+    sold_date: { $gte: cutoffStr },   // string compare vs "YYYY-MM-DD"
   };
 }
+
 
 async function fetchMongoDBData(filterObj, coll) {
   const client = new MongoClient(MONGO_URI);

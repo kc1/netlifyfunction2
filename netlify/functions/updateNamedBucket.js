@@ -13,7 +13,7 @@ async function upsertToBucket(coll, objArr) {
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
     // Use ID as the unique identifier in the filter.
-    const filter = { ID : obj.ID };
+    const filter = { ID: obj.ID };
     try {
       const result = await coll.updateOne(
         filter,
@@ -35,30 +35,22 @@ async function upsertToBucket(coll, objArr) {
   }
 }
 
-/* exports.handler = async function (event, context) {
-  const myObjArray = JSON.parse(event.body);
-  console.log(myObjArray);
-
-  await upsertToBucket(collection, myObjArray);
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: myObjArray,
-    }),
-  };
-} */
-
-  async function createUniqueIndexForListingId(coll) {
+async function createUniqueIndexForId(coll) {
   try {
-    const indexName = await coll.createIndex(
-      { ID : 1 },
-      { unique: true }
-    );
+    // Get existing indexes
+    const indexes = await coll.indexes();
+    // Check if unique index on ID exists
+    const indexExists = indexes.some(index => index.key.ID === 1 && index.unique === true);
+    if (indexExists) {
+      console.log("Unique index on ID already exists");
+      return;
+    }
+    // Create the index
+    const indexName = await coll.createIndex({ ID: 1 }, { unique: true });
     console.log(`Unique index created with name: ${indexName}`);
     return indexName;
   } catch (error) {
-    console.error("Error creating unique index for listing_id:", error);
+    console.error("Error creating unique index for ID:", error);
     throw error;
   }
 }
@@ -82,9 +74,9 @@ exports.handler = async function (event, context) {
   await upsertToBucket(collection, myObjArray);
 
   return {
-    statusCode: 204,
+    statusCode: 200,
     body: JSON.stringify({
-      message: "Data received successfully",
+      message: myObjArray,
     }),
   };
 };

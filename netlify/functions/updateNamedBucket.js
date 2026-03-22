@@ -69,7 +69,7 @@ exports.handler = async function (event, context) {
   console.log("Received collection name:", collectionName);
 
   // Call the function to ensure a unique index on "listing_id" is created
-  await createUniqueIndexForListingId(collection);
+  await createUniqueIndexForId(collection);
 
   await upsertToBucket(collection, myObjArray);
 

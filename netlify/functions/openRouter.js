@@ -1,6 +1,7 @@
 const fetch = require("node-fetch");
-    // model: "google/gemini-2.5-flash",
-    // model: "google/gemini-2.5-flash-preview-09-2025",
+// model: "google/gemini-2.5-flash",
+// model: "google/gemini-2.5-flash-preview-09-2025",
+// "model": "google/gemini-3-flash-preview",
 
 async function openRouterApiRequest(imageLink, myPrompt) {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -10,7 +11,7 @@ async function openRouterApiRequest(imageLink, myPrompt) {
   // const imageUrl = "https://drive.google.com/thumbnail?sz=w1000&id=1cpHMDtvv5xoEMYqe2PdQZBpIrZIKuoba";
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
   const payload = {
-    "model": "google/gemini-3-flash-preview",
+    model: "google/gemini-2.5-flash-lite-preview-09-2025",
 
     messages: [
       {

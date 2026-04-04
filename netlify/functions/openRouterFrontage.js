@@ -85,9 +85,9 @@ exports.handler = async (event, context) => {
   
   Ensure the JSON is valid, properly formatted, and contains only the allowed values for orientation.
   `;
-  const prompt = createAnalysisPrompt(245); // Example: X = 245 feet
+  // const prompt = createAnalysisPrompt(245); // Example: X = 245 feet
 
-  console.log(prompt);
+  // console.log(prompt);
 
   let promises = [];
   let myObjs = [];
@@ -99,7 +99,7 @@ exports.handler = async (event, context) => {
       waterFile = obj.WaterURL;
       console.log("Water File: " + waterFile);
       if (obj.calculatedPerimeterFeet!=="") {
-        const myPrompt = createAnalysisPrompt(obj.calculatedPerimeterFeet);
+        const myPrompt = createAnalysisPrompt(Math.round(obj.calculatedPerimeterFeet));
         promises.push(openRouterApiRequest(waterFile, myPrompt));
         obj.calcFrontage = "PENDING";
         myObjs.push(obj);

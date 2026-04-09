@@ -58,18 +58,18 @@ async function openRouterApiRequest(imageLink, myPrompt) {
 exports.handler = async (event, context) => {
 
   console.log("Hello from Netlify Function!");
-let objArr;
+  let objArr;
 
-    if (typeof event.body === 'string') {
-      objArr = JSON.parse(event.body);
-    } else if (event.body && typeof event.body === 'object') {
-      objArr = event.body; // in case it's already parsed (rare)
-    } else {
-      throw new Error("No body received");
-    }
+  if (typeof event.body === "string") {
+    objArr = JSON.parse(event.body);
+  } else if (event.body && typeof event.body === "object") {
+    objArr = event.body; // in case it's already parsed (rare)
+  } else {
+    throw new Error("No body received");
+  }
 
-    console.log(`Received ${objArr.length} row objects`);
-    console.log("First row sample:", JSON.stringify(objArr[0], null, 2));
+  console.log(`Received ${objArr.length} row objects`);
+  console.log("First row sample:", JSON.stringify(objArr[0], null, 2));
   // const objArr = JSON.parse(event.body);
   // console.log("Received array of spreadsheet row objects:", objArr);
 
@@ -144,14 +144,16 @@ let objArr;
     output.push(myObj);
   }
 
-  return {
-    statusCode: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      message: "Processed results",
-      results: output
-    })
-  };
+  const responseBody = {
+      message: `Successfully processed ${output.length} rows`,
+      results: JSON.stringify(output)   // ← Important: send as string
+    };
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(responseBody)
+    };
 };

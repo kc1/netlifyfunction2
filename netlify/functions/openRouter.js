@@ -143,7 +143,7 @@ exports.handler = async (event, context) => {
     },
     body: JSON.stringify({
       message: "Processed results",
-      results: JSON.stringify(output),
-    }),
+      results: output
+    })
   };
 };

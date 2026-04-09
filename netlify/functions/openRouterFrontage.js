@@ -101,7 +101,7 @@ exports.handler = async (event, context) => {
       if (obj.calculatedPerimeterFeet!=="") {
         const myPrompt = createAnalysisPrompt(Math.round(obj.calculatedPerimeterFeet));
         promises.push(openRouterApiRequest(waterFile, myPrompt));
-        obj.calcFrontage = "PENDING";
+        // obj.calcFrontage = "PENDING";
         myObjs.push(obj);
       }
     }

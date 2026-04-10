@@ -91,34 +91,34 @@ exports.handler = async (event, context) => {
     let promiseIndex = 0;
     let waterFile, contourFile, roadFile;
     for (let i = 0; i < objArr.length; i++) {
-      const obj = objArr[i];
-      if (obj.WaterURL && ["", "{}"].includes(obj.WaterResponse)) {
-        waterFile = obj.WaterURL;
+      let rowObj = objArr[i];
+      if (rowObj.WaterURL && ["", "{}"].includes(rowObj.WaterResponse)) {
+        waterFile = rowObj.WaterURL;
         console.log("Water File: " + waterFile);
         promises.push(openRouterApiRequest(waterFile, waterText));
-        obj.WaterResponse = promiseIndex;
+        rowObj.WaterResponse = promiseIndex;
         promiseIndex++;
         // myObjs.push(obj);
       }
-      if (obj.ContourURL && ["", "{}"].includes(obj.ContourResponse)) {
-        contourFile = obj.ContourURL;
+      if (rowObj.ContourURL && ["", "{}"].includes(rowObj.ContourResponse)) {
+        contourFile = rowObj.ContourURL;
         console.log("Contour File: " + contourFile);
         promises.push(openRouterApiRequest(contourFile, contourText));
-        obj.ContourResponse = promiseIndex;
+        rowObj.ContourResponse = promiseIndex;
         promiseIndex++;
         // myObjs.push(obj);
       }
-      if (obj.ContourURL && ["", "{}"].includes(obj.RoadResponse)) {
+      if (rowObj.RoadURL && ["", "{}"].includes(rowObj.RoadResponse)) {
         // Note: using ContourURL for Road as well, adjust if needed
-        roadFile = obj.ContourURL;
+        roadFile = rowObj.RoadURL;
         console.log("Road File: " + roadFile);
         promises.push(openRouterApiRequest(roadFile, roadText));
-        obj.RoadResponse = promiseIndex;
+        rowObj.RoadResponse = promiseIndex;
         promiseIndex++;
         // myObjs.push(obj);
       }
 
-      myObjs.push(obj);
+      updatedObjs.push(rowObj);
     }
 
     console.log("Promises:", promises);
@@ -127,35 +127,35 @@ exports.handler = async (event, context) => {
     console.log("Results:", results);
 
     let output = [];
-    for (let i = 0; i < myObjs.length; i++) {
-      const myObj = myObjs[i];
+    for (let i = 0; i < updatedObjs.length; i++) {
+      let updatedRowObj = updatedObjs[i];
       const result = results[i];
       if (result.status === "fulfilled") {
-        // if (myObj.WaterResponse === "PENDING") {
-        if (typeof myObj.WaterResponse === "number") {
-          let myPromise = results[Number(myObj.WaterResponse)];
-          myObj.WaterResponse = myPromise.value;
+        // if (updatedRowObj.WaterResponse === "PENDING") {
+        if (typeof updatedRowObj.WaterResponse === "number") {
+          let myPromise = results[Number(updatedRowObj.WaterResponse)];
+          updatedRowObj.WaterResponse = myPromise.value;
         }
-        if (typeof myObj.ContourResponse === "number") {
-          let myPromise = results[Number(myObj.ContourResponse)];
-          myObj.ContourResponse = myPromise.value;
+        if (typeof updatedRowObj.ContourResponse === "number") {
+          let myPromise = results[Number(updatedRowObj.ContourResponse)];
+          updatedRowObj.ContourResponse = myPromise.value;
         }
-        if (typeof myObj.RoadResponse === "number") {
-          let myPromise = results[Number(myObj.RoadResponse)];
-          myObj.RoadResponse = myPromise.value;
+        if (typeof updatedRowObj.RoadResponse === "number") {
+          let myPromise = results[Number(updatedRowObj.RoadResponse)];
+          updatedRowObj.RoadResponse = myPromise.value;
         }
       } else if (result.status === "rejected") {
-        if (typeof myObj.WaterResponse === "number") {
-          myObj.WaterResponse = "{}";
+        if (typeof updatedRowObj.WaterResponse === "number") {
+          updatedRowObj.WaterResponse = "{}";
         }
-        if (typeof myObj.ContourResponse === "number") {
-          myObj.ContourResponse = "{}";
+        if (typeof updatedRowObj.ContourResponse === "number") {
+          updatedRowObj.ContourResponse = "{}";
         }
-        if (typeof myObj.RoadResponse === "number") {
-          myObj.RoadResponse = "{}";
+        if (typeof updatedRowObj.RoadResponse === "number") {
+          updatedRowObj.RoadResponse = "{}";
         }
       }
-      output.push(myObj);
+      output.push(updatedRowObj);
     }
 
     const responseBody = {

@@ -94,7 +94,7 @@ exports.handler = async (event, context) => {
 
     for (let i = 0; i < objArr.length; i++) {
       let rowObj = objArr[i];
-      if (rowObj.WaterURL && ["", "{}"].includes(rowObj.WaterResponse)) {
+      if (rowObj.WaterURL && rowObj.WaterResponse.length < 3) {
         waterFile = rowObj.WaterURL;
         console.log("Water File: " + waterFile);
         promises.push(openRouterApiRequest(waterFile, waterText));
@@ -102,7 +102,7 @@ exports.handler = async (event, context) => {
         promiseIndex++;
         // myObjs.push(obj);
       }
-      if (rowObj.ContourURL && ["", "{}"].includes(rowObj.ContourResponse)) {
+      if (rowObj.ContourURL && rowObj.ContourResponse.length < 3  ) {
         contourFile = rowObj.ContourURL;
         console.log("Contour File: " + contourFile);
         promises.push(openRouterApiRequest(contourFile, contourText));
@@ -110,7 +110,7 @@ exports.handler = async (event, context) => {
         promiseIndex++;
         // myObjs.push(obj);
       }
-      if (rowObj.RoadURL && ["", "{}"].includes(rowObj.RoadResponse)) {
+      if (rowObj.RoadURL && rowObj.RoadResponse.length < 3  ) {
         // Note: using ContourURL for Road as well, adjust if needed
         roadFile = rowObj.RoadURL;
         console.log("Road File: " + roadFile);

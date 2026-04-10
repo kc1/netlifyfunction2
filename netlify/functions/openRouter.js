@@ -91,19 +91,19 @@ exports.handler = async (event, context) => {
     let waterFile, contourFile, roadFile;
     for (let i = 0; i < objArr.length; i++) {
       const obj = objArr[i];
-      if (obj.WaterURL && ["", "{}"].includes(obj.RoadResponse)) {
+      if (obj.WaterURL && ["", "{}"].includes(obj.WaterResponse)) {
         waterFile = obj.WaterURL;
         console.log("Water File: " + waterFile);
         promises.push(openRouterApiRequest(waterFile, waterText));
         obj.WaterResponse = "PENDING";
-        myObjs.push(obj);
+        // myObjs.push(obj);
       }
       if (obj.ContourURL && ["", "{}"].includes(obj.ContourResponse)) {
         contourFile = obj.ContourURL;
         console.log("Contour File: " + contourFile);
         promises.push(openRouterApiRequest(contourFile, contourText));
         obj.ContourResponse = "PENDING";
-        myObjs.push(obj);
+        // myObjs.push(obj);
       }
       if (obj.ContourURL && ["", "{}"].includes(obj.RoadResponse)) {
         // Note: using ContourURL for Road as well, adjust if needed
@@ -111,8 +111,10 @@ exports.handler = async (event, context) => {
         console.log("Road File: " + roadFile);
         promises.push(openRouterApiRequest(roadFile, roadText));
         obj.RoadResponse = "PENDING";
-        myObjs.push(obj);
+        // myObjs.push(obj);
       }
+
+      myObjs.push(obj);
     }
 
     console.log("Promises:", promises);
@@ -127,17 +129,19 @@ exports.handler = async (event, context) => {
       if (result.status === "fulfilled") {
         if (myObj.WaterResponse === "PENDING") {
           myObj.WaterResponse = result.value;
-        } else if (myObj.ContourResponse === "PENDING") {
+        }
+        if (myObj.ContourResponse === "PENDING") {
           myObj.ContourResponse = result.value;
-        } else if (myObj.RoadResponse === "PENDING") {
+        }
+        if (myObj.RoadResponse === "PENDING") {
           myObj.RoadResponse = result.value;
         }
       } else if (result.status === "rejected") {
         if (myObj.WaterResponse === "PENDING") {
           myObj.WaterResponse = "Error: " + result.reason.message;
-        } else if (myObj.ContourResponse === "PENDING") {
+        }  if (myObj.ContourResponse === "PENDING") {
           myObj.ContourResponse = "Error: " + result.reason.message;
-        } else if (myObj.RoadResponse === "PENDING") {
+        }  if (myObj.RoadResponse === "PENDING") {
           myObj.RoadResponse = "Error: " + result.reason.message;
         }
       }

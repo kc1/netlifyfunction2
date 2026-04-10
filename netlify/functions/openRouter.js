@@ -145,13 +145,13 @@ exports.handler = async (event, context) => {
           myObj.RoadResponse = myPromise.value;
         }
       } else if (result.status === "rejected") {
-        if (myObj.WaterResponse === "PENDING") {
+        if (typeof myObj.WaterResponse === "number") {
           myObj.WaterResponse = "{}";
         }
-        if (myObj.ContourResponse === "PENDING") {
+        if (typeof myObj.ContourResponse === "number") {
           myObj.ContourResponse = "{}";
         }
-        if (myObj.RoadResponse === "PENDING") {
+        if (typeof myObj.RoadResponse === "number") {
           myObj.RoadResponse = "{}";
         }
       }

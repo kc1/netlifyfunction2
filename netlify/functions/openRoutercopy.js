@@ -131,28 +131,22 @@ exports.handler = async (event, context) => {
       const myObj = myObjs[i];
       const result = results[i];
       if (result.status === "fulfilled") {
-        // if (myObj.WaterResponse === "PENDING") {
-        if (typeof myObj.WaterResponse === "number") {
-          let myPromise = results[Number(myObj.WaterResponse)];
-          myObj.WaterResponse = myPromise.value;
+        if (myObj.WaterResponse === "PENDING") {
+          myObj.WaterResponse = result.value;
         }
-        if (typeof myObj.ContourResponse === "number") {
-          let myPromise = results[Number(myObj.ContourResponse)];
-          myObj.ContourResponse = myPromise.value;
+        if (myObj.ContourResponse === "PENDING") {
+          myObj.ContourResponse = result.value;
         }
-        if (typeof myObj.RoadResponse === "number") {
-          let myPromise = results[Number(myObj.RoadResponse)];
-          myObj.RoadResponse = myPromise.value;
+        if (myObj.RoadResponse === "PENDING") {
+          myObj.RoadResponse = result.value;
         }
       } else if (result.status === "rejected") {
         if (myObj.WaterResponse === "PENDING") {
-          myObj.WaterResponse = "{}";
-        }
-        if (myObj.ContourResponse === "PENDING") {
-          myObj.ContourResponse = "{}";
-        }
-        if (myObj.RoadResponse === "PENDING") {
-          myObj.RoadResponse = "{}";
+          myObj.WaterResponse = "Error: " + result.reason.message;
+        }  if (myObj.ContourResponse === "PENDING") {
+          myObj.ContourResponse = "Error: " + result.reason.message;
+        }  if (myObj.RoadResponse === "PENDING") {
+          myObj.RoadResponse = "Error: " + result.reason.message;
         }
       }
       output.push(myObj);

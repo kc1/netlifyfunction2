@@ -129,32 +129,19 @@ exports.handler = async (event, context) => {
     let output = [];
     for (let i = 0; i < updatedObjs.length; i++) {
       let updatedRowObj = updatedObjs[i];
-      const result = results[i];
-      if (result.status === "fulfilled") {
-        // if (updatedRowObj.WaterResponse === "PENDING") {
-        if (typeof updatedRowObj.WaterResponse === "number") {
-          let myPromise = results[Number(updatedRowObj.WaterResponse)];
-          updatedRowObj.WaterResponse = myPromise.value;
-        }
-        if (typeof updatedRowObj.ContourResponse === "number") {
-          let myPromise = results[Number(updatedRowObj.ContourResponse)];
-          updatedRowObj.ContourResponse = myPromise.value;
-        }
-        if (typeof updatedRowObj.RoadResponse === "number") {
-          let myPromise = results[Number(updatedRowObj.RoadResponse)];
-          updatedRowObj.RoadResponse = myPromise.value;
-        }
-      } else if (result.status === "rejected") {
-        if (typeof updatedRowObj.WaterResponse === "number") {
-          updatedRowObj.WaterResponse = "{}";
-        }
-        if (typeof updatedRowObj.ContourResponse === "number") {
-          updatedRowObj.ContourResponse = "{}";
-        }
-        if (typeof updatedRowObj.RoadResponse === "number") {
-          updatedRowObj.RoadResponse = "{}";
-        }
+      if (typeof updatedRowObj.WaterResponse === "number") {
+        const result = results[Number(updatedRowObj.WaterResponse)];
+        updatedRowObj.WaterResponse = result.value;
       }
+      if (typeof updatedRowObj.ContourResponse === "number") {
+        const result = results[Number(updatedRowObj.ContourResponse)];
+        updatedRowObj.ContourResponse = result.value;
+      }
+      if (typeof updatedRowObj.RoadResponse === "number") {
+        const result = results[Number(updatedRowObj.RoadResponse)];
+        updatedRowObj.RoadResponse = result.value;
+      }
+
       output.push(updatedRowObj);
     }
 

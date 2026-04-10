@@ -87,9 +87,11 @@ exports.handler = async (event, context) => {
     // contourLink = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
 
     let promises = [];
-    let myObjs = [];
+    let updatedObjs = [];
+    let output = [];
     let promiseIndex = 0;
     let waterFile, contourFile, roadFile;
+
     for (let i = 0; i < objArr.length; i++) {
       let rowObj = objArr[i];
       if (rowObj.WaterURL && ["", "{}"].includes(rowObj.WaterResponse)) {
@@ -126,7 +128,6 @@ exports.handler = async (event, context) => {
     const results = await Promise.allSettled(promises);
     console.log("Results:", results);
 
-    let output = [];
     for (let i = 0; i < updatedObjs.length; i++) {
       let updatedRowObj = updatedObjs[i];
       if (typeof updatedRowObj.WaterResponse === "number") {

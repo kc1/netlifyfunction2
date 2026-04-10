@@ -110,9 +110,9 @@ exports.handler = async (event, context) => {
         promiseIndex++;
         // myObjs.push(obj);
       }
-      if (rowObj.RoadURL && rowObj.RoadResponse.length < 3  ) {
+      if (rowObj.ContourURL && rowObj.RoadResponse.length < 3  ) {
         // Note: using ContourURL for Road as well, adjust if needed
-        roadFile = rowObj.RoadURL;
+        roadFile = rowObj.ContourURL;
         console.log("Road File: " + roadFile);
         promises.push(openRouterApiRequest(roadFile, roadText));
         rowObj.RoadResponse = promiseIndex;

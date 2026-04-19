@@ -102,9 +102,9 @@ exports.handler = async (event, context) => {
     const myObj = myObjs[i];
     const result = results[i];
     if (result.status === "fulfilled") {
-      myObj.calcFrontage = result.value;
+      myObj.RoadAvailable = result.value;
     } else if (result.status === "rejected") {
-      myObj.calcFrontage = "Error: " + result.reason.message;
+      myObj.RoadAvailable = "Error: " + result.reason.message;
     }
     output.push(myObj);
   }

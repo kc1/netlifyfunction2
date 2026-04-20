@@ -29,6 +29,11 @@ async function openRouterApiRequest(imageLink, myPrompt) {
         ],
       },
     ],
+    reasoning: {
+      effort: "high",
+      exclude: false,
+      enabled: true,
+    },
   };
 
   const options = {

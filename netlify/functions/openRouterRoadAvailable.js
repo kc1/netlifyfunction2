@@ -8,11 +8,12 @@ async function openRouterApiRequest(imageLink, myPrompt) {
   // console.log("API Key:", apiKey);
   // Replace apiKey above with a secure value in production
 
+  // model: "google/gemini-2.5-flash-lite-preview-09-2025",
   // const imageUrl = "https://drive.google.com/thumbnail?sz=w1000&id=1cpHMDtvv5xoEMYqe2PdQZBpIrZIKuoba";
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
-  const payload = {
-    model: "google/gemini-2.5-flash-lite-preview-09-2025",
 
+  const payload = {
+    model: "google/gemini-2.5-flash-lite",
     messages: [
       {
         role: "user",
@@ -108,7 +109,7 @@ exports.handler = async (event, context) => {
     }
     output.push(myObj);
   }
-  
+
   console.log("here is the returned array");
   console.log(JSON.stringify(output));
 

@@ -99,7 +99,7 @@ exports.handler = async (event, context) => {
 
   let output = [];
   for (let i = 0; i < myObjs.length; i++) {
-    const myObj = myObjs[i];
+    let myObj = myObjs[i];
     const result = results[i];
     if (result.status === "fulfilled") {
       myObj.RoadAvailable = result.value;
@@ -108,6 +108,9 @@ exports.handler = async (event, context) => {
     }
     output.push(myObj);
   }
+  
+  console.log("here is the returned array");
+  console.log(JSON.stringify(output));
 
   return {
     statusCode: 200,

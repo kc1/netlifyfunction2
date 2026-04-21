@@ -73,7 +73,7 @@ exports.handler = async (event, context) => {
   Once you have confirmed the exact boundaries of the selected lot:
   Determine whether there is a road lying within or immediately adjacent to the lot. Consider a road to be any paved or unpaved path that is clearly distinguishable and appears to be used for vehicular traffic. This includes driveways, private roads, and public roads.
   'Immediately adjacement' means that the road is directly touching the lot boundary or is separated by a very narrow strip of land (e.g., a sidewalk, a small grassy area, or a driveway).
-  You can estimate the immediately adjacent road distance based on the width of the road. The distance between the road and the blue boundary line should be less than 400% width of the road to be considered 'immediately adjacent'.
+  You can estimate the immediately adjacent road distance based on the width of the road. The distance between the road and the blue boundary line should be less than 400%  of the width of the road to be considered 'immediately adjacent'.
 
   Then respond in this exact format:
   

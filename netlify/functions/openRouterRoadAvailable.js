@@ -18,7 +18,7 @@ async function openRouterApiRequest(imageLink, myPrompt) {
 
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
 
-  const payload = {
+/*   const payload = {
     model: "google/gemma-4-26b-a4b-it",
     reasoning: { enabled: true },
     messages: [
@@ -31,9 +31,10 @@ async function openRouterApiRequest(imageLink, myPrompt) {
       },
     ],
   };
-
-  /*   const payload = {
+ */
+    const payload = {
     model: "google/gemini-2.5-flash-lite",
+    reasoning: { enabled: true },
     messages: [
       {
         role: "user",
@@ -50,7 +51,7 @@ async function openRouterApiRequest(imageLink, myPrompt) {
       },
     ],
   };
- */
+
   /* reasoning: {
       effort: "high",
       exclude: false,

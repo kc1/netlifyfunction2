@@ -33,7 +33,7 @@ async function openRouterApiRequest(imageLink, myPrompt) {
   };
  */
     const payload = {
-    model: "google/gemini-2.5-flash-lite",
+    model: "google/gemini-2.5-flash",
     reasoning: { enabled: true },
     messages: [
       {

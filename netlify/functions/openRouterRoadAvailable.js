@@ -34,7 +34,7 @@ async function openRouterApiRequest(imageLink, myPrompt) {
  */
     const payload = {
     model: "google/gemini-2.5-flash",
-    reasoning: { enabled: true },
+    // reasoning: { enabled: true },
     messages: [
       {
         role: "user",

@@ -73,7 +73,8 @@ exports.handler = async (event, context) => {
   Once you have confirmed the exact boundaries of the selected lot:
   Determine whether there is a road lying within or immediately adjacent to the lot. If there
   is a road but is not directly adjacent to the lot, please indicate that as well. Consider a road to be any paved or unpaved path that is clearly distinguishable and appears to be used for vehicular traffic. This includes driveways, private roads, and public roads.
-
+  Immediately adjacement means that the road is directly touching the lot boundary or is separated by a very narrow strip of land (e.g., a sidewalk, a small grassy area, or a driveway).
+  You can estimate this distance based on the width of the road. The distance between the road and the lot boundary should be less than 4 roadwidths to be considered within close proximity.
   Then respond in this exact format:
   1. Provide your full reasoning and analysis.
  2. Add two blank newlines.

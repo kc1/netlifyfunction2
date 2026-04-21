@@ -70,25 +70,38 @@ exports.handler = async (event, context) => {
   console.log("Received array of spreadsheet row objects:", objArr);
 
   const roadAvailabilityPrompt = `
-  You are an experienced real estate investor and professional land surveyor.
-  Analyze the provided image and locate the selected lot. The lot is clearly outlined by a thin bright blue boundary line and has a central marker consisting of white letters "id" on a black background, followed by a red period.
-  Once you have confirmed the exact boundaries of the selected lot:
-  Determine whether there is a road lying within or immediately adjacent to the lot. Consider a road to be any paved or unpaved path that is clearly distinguishable and appears to be used for vehicular traffic. This includes driveways, private roads, and public roads.
-  'Immediately adjacement' means that the road is directly touching the lot boundary or is separated by a very narrow strip of land (e.g., a sidewalk, a small grassy area, or a driveway).
-  You can estimate the immediately adjacent road distance based on the width of the road. The distance between the road and the blue boundary line should be less than 400%  of the width of the road to be considered 'immediately adjacent'.
+You are an experienced real estate investor and professional land surveyor with expertise in aerial/satellite imagery analysis and lot development feasibility.
 
-  Then respond in this exact format:
-  
- 1. Provide your full reasoning and analysis.
- 2. Add two blank newlines.
- 3. Output the separator: -----------
- 4. Add two more blank newlines.
- 5. Output a valid JSON object in this exact structure:
-  {
-   "AvailableRoad": <Yes/No>
- }
-  Ensure the JSON is valid, properly formatted, and contains only the allowed values for orientation.
- `;
+Carefully analyze the provided image. The selected lot is **unambiguously** marked by:
+- A thin, bright blue boundary line outlining the exact perimeter.
+- A central marker inside the lot consisting of white letters "id" on a black rectangular background, followed immediately by a red period (i.e., the label "id.").
+
+Step 1: First confirm you have correctly identified the selected lot by its blue boundary and central "id." marker. Ignore all other lots or markings.
+
+Step 2: Thoroughly inspect the interior of the lot and its entire perimeter for any road. A road is defined as any clearly distinguishable paved, gravel, dirt, or graded path that appears suitable for vehicular traffic (cars, trucks, construction equipment, etc.). This explicitly includes public roads, private roads, driveways, access lanes, or easements — even if unpaved.
+
+Step 3: Determine if a road lies **within** the lot boundaries OR is **immediately adjacent** to the lot.
+- "Immediately adjacent" means the road either:
+  - Directly touches any portion of the blue boundary line, OR
+  - Is separated from the blue boundary by only a very narrow strip (sidewalk, curb, grass verge, drainage ditch, or similar).
+- To estimate "immediately adjacent," use this clear rule of thumb: the visible gap between the road edge and the blue boundary line must be **less than 4 times the visible width of that road** in the image (this accounts for scale and perspective distortion). If the gap is larger, it is NOT immediately adjacent.
+
+Step 4: If any part of a qualifying road meets the above criteria (inside or immediately adjacent), the answer is Yes. Otherwise, it is No. Base your decision strictly on visible evidence in the image. If image quality is poor or features are ambiguous, default to No and explain why in your reasoning.
+
+Respond in this exact format — do not deviate:
+
+1. Provide your full reasoning and analysis (include: lot confirmation, description of any roads found, distance/gap assessment using the 4× rule, and final decision rationale).
+2. Add two blank newlines.
+3. Output the separator: -----------
+4. Add two more blank newlines.
+5. Output a valid JSON object in this exact structure (use string values "Yes" or "No" only):
+
+{
+  "AvailableRoad": "Yes"
+}
+
+The JSON must be valid, properly formatted, and contain only the "AvailableRoad" key with "Yes" or "No".
+`;
 
   let promises = [];
   let myObjs = [];

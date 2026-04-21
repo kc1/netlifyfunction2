@@ -14,6 +14,23 @@ async function openRouterApiRequest(imageLink, myPrompt) {
 
   const payload = {
     model: "google/gemini-2.5-flash-lite",
+    include_reasoning: true,
+    reasoning: {
+      max_tokens: 1000,
+    },
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text: myPrompt },
+          { type: "image_url", image_url: { url: imageLink } },
+        ],
+      },
+    ],
+  };
+
+  /*   const payload = {
+    model: "google/gemini-2.5-flash-lite",
     messages: [
       {
         role: "user",
@@ -30,7 +47,7 @@ async function openRouterApiRequest(imageLink, myPrompt) {
       },
     ],
   };
-
+ */
   /* reasoning: {
       effort: "high",
       exclude: false,

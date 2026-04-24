@@ -1,3 +1,6 @@
+IGNORE THIS
+
+
 Excellent. This is a perfect use case for prompt engineering. You want to provide an LLM with a narrative of an interaction and have it structure that narrative into a precise JSON format.
 
 Here is a comprehensive prompt you can enter into Gemini (or another advanced LLM). It's designed in three parts for clarity and effectiveness:

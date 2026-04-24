@@ -18,7 +18,7 @@ async function openRouterApiRequest(imageLink, myPrompt) {
 
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
 
-/*   const payload = {
+  /*   const payload = {
     model: "google/gemma-4-26b-a4b-it",
     reasoning: { enabled: true },
     messages: [
@@ -32,7 +32,7 @@ async function openRouterApiRequest(imageLink, myPrompt) {
     ],
   };
  */
-    const payload = {
+  const payload = {
     model: "google/gemini-2.5-flash",
     messages: [
       {
@@ -90,37 +90,41 @@ exports.handler = async (event, context) => {
   console.log("Received array of spreadsheet row objects:", objArr);
 
   const roadAvailabilityPrompt = `
-You are an experienced real estate investor and professional land surveyor with expertise in aerial/satellite imagery analysis and lot development feasibility.
+    You are an experienced real estate investor and professional land surveyor with expertise in aerial/satellite imagery analysis and lot development feasibility. Your task is to determine road access for a *specific, selected lot* based solely on the provided image.
 
-Carefully analyze the provided image. The selected lot is **unambiguously** marked by:
-- A thin, bright blue boundary line outlining the exact perimeter.
-- A central marker inside the lot consisting of white letters "id" on a black rectangular background, followed immediately by a red period (i.e., the label "id.").
+    Carefully analyze the provided image. The selected lot is **unambiguously** marked by:
+    - A thin, bright blue boundary line outlining the exact perimeter.
+    - A central marker inside the lot consisting of white letters "id" on a black rectangular background, followed immediately by a red period (i.e., the label "id.").
 
-Step 1: First confirm you have correctly identified the selected lot by its blue boundary and central "id." marker. Ignore all other lots or markings.
+    Be aware that the image may contain other visual elements such as other property lines (e.g., orange lines), non-selected parcel markings, or informational overlays. These are **not relevant** to your primary task of assessing the selected lot for road access and should be disregarded for that purpose. Your focus is strictly on the selected blue-bordered lot and its immediate surroundings for road identification.
 
-Step 2: Thoroughly inspect the interior of the lot and its entire perimeter for any road. A road is defined as any clearly distinguishable paved, gravel, dirt, or graded path that appears suitable for vehicular traffic (cars, trucks, construction equipment, etc.). This explicitly includes public roads, private roads, driveways, access lanes, or easements — even if unpaved.
+    Step 1: First confirm you have correctly identified the selected lot by its blue boundary and central "id." marker. **Crucially, ignore all other lots, non-blue boundary markings (e.g., orange property lines), or informational overlays that are not part of the selected lot's blue boundary or the road itself.**
 
-Step 3: Determine if a road lies **within** the lot boundaries OR is **immediately adjacent** to the lot.
-- "Immediately adjacent" means the road either:
-  - Directly touches any portion of the blue boundary line, OR
-  - Is separated from the blue boundary by only a very narrow strip (sidewalk, curb, grass verge, drainage ditch, or similar).
-- To estimate "immediately adjacent," use this clear rule of thumb: the visible gap between the road edge and the blue boundary line must be **less than 4 times the visible width of that road** in the image (this accounts for scale and perspective distortion). If the gap is larger, it is NOT immediately adjacent.
+    Step 2: Thoroughly inspect the interior of the selected lot and its entire perimeter for any road. A road is defined as any clearly distinguishable linear or **curvilinear** path that appears suitable for vehicular traffic (cars, trucks, construction equipment, etc.). **As observed in the current image example, roads typically appear as a distinct, consistent width stretch of white or very light-colored, paved, or uniformly textured surface, characterized by clear edges.** This appearance may include textual labels (e.g., "N Shiloh Rd"). **Note that other property lines, often depicted in orange, are NOT part of the road itself and must be ignored when identifying the road.** This explicitly includes public roads, private roads, driveways, access lanes, or easements — even if unpaved or newly graded. Look for named roads or unnamed, but clearly defined, vehicular paths.
 
-Step 4: If any part of a qualifying road meets the above criteria (inside or immediately adjacent), the answer is Yes. Otherwise, it is No. Base your decision strictly on visible evidence in the image. If image quality is poor or features are ambiguous, default to No and explain why in your reasoning.
+    Step 3: Determine if a qualifying road (as defined in Step 2) lies **within** the selected lot boundaries OR is **immediately adjacent** to the selected lot.
+    - 'Immediately adjacent' means the road either:
+      - Directly touches any portion of the blue boundary line, OR
+      - Is separated from the blue boundary by only a very narrow strip (such as a sidewalk, curb, grass verge, drainage ditch, or similar negligible barrier that does not impede direct access).
+    - To estimate 'immediately adjacent' use this clear rule of thumb: the visible gap between the road edge and the blue boundary line must be **less than 4 times the visible width of that specific road** in the image (this accounts for scale and perspective distortion). If the gap is larger, it is NOT immediately adjacent.
 
-Respond in this exact format — do not deviate:
+    Step 4: If any part of a qualifying road meets the above criteria (inside or immediately adjacent), the answer is Yes. Otherwise, it is No. Base your decision strictly on visible evidence in the image. If image quality is poor or features are ambiguous, default to No and explain why in your reasoning.
 
-1. Provide your full reasoning and analysis (include: lot confirmation, description of any roads found, distance/gap assessment using the 4× rule, and final decision rationale).
-2. Add two blank newlines.
-3. Output the separator: -----------
-4. Add two more blank newlines.
-5. Output a valid JSON object in this exact structure (use string values "Yes" or "No" only):
+    Respond in this exact format — do not deviate:
 
-{
-  "AvailableRoad": "Yes"
-}
+    1. Provide your full reasoning and analysis (include: lot confirmation, description of any roads found, assessment of the road's appearance, distance/gap assessment using the 4× rule, and final decision rationale).
+    2. Add two blank newlines.
+    3. Output the separator: -----------
+    4. Add two more blank newlines.
+    5. Output a valid JSON object in this exact structure (use string values "Yes" or "No" only):
 
-The JSON must be valid, properly formatted, and contain only the "AvailableRoad" key with "Yes" or "No".
+    \`\`\`json
+    {
+      "AvailableRoad": "Yes|No"
+    }
+    \`\`\`
+
+    The JSON must be valid, properly formatted, and contain only the "AvailableRoad" key with "Yes" or "No".
 `;
 
   let promises = [];

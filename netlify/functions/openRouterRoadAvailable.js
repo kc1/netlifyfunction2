@@ -106,7 +106,7 @@ exports.handler = async (event, context) => {
     - 'Immediately adjacent' means the road either:
       - Directly touches any portion of the blue boundary line, OR
       - Is separated from the blue boundary by only a very narrow strip (such as a sidewalk, curb, grass verge, drainage ditch, or similar negligible barrier that does not impede direct access).
-    - To estimate 'immediately adjacent' use this clear rule of thumb: the visible gap between the road edge and the blue boundary line must be **less than 4 times the visible width of that specific road** in the image (this accounts for scale and perspective distortion). If the gap is larger, it is NOT immediately adjacent.
+    - To estimate 'immediately adjacent' use this clear rule of thumb: the visible gap between the road edge and the blue boundary line must be **less than 2 times the visible width of that specific road** in the image (this accounts for scale and perspective distortion). If the gap is larger, it is NOT immediately adjacent.
 
     Step 4: If any part of a qualifying road meets the above criteria (inside or immediately adjacent), the answer is Yes. Otherwise, it is No. Base your decision strictly on visible evidence in the image. If image quality is poor or features are ambiguous, default to No and explain why in your reasoning.
 

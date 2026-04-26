@@ -90,7 +90,7 @@ exports.handler = async (event, context) => {
   console.log("Received array of spreadsheet row objects:", objArr);
 
   const roadAvailabilityPrompt = `
-    You are an experienced real estate investor and professional land surveyor with expertise in aerial/satellite imagery analysis and lot development feasibility. Your task is to determine road access for a *specific, selected lot* based solely on the provided image.
+    You are an experienced real estate investor and professional land surveyor with expertise in aerial/satellite imagery analysis, GIS and lot development feasibility. Your task is to determine road access for a *specific, selected lot* based solely on the provided image.
 
     Carefully analyze the provided image. The selected lot is **unambiguously** marked by:
     - A thin, bright blue boundary line outlining the exact perimeter.
@@ -98,9 +98,9 @@ exports.handler = async (event, context) => {
 
     Be aware that the image may contain other visual elements such as other property lines (e.g., orange lines), non-selected parcel markings, or informational overlays. These are **not relevant** to your primary task of assessing the selected lot for road access and should be disregarded for that purpose. Your focus is strictly on the selected blue-bordered lot and its immediate surroundings for road identification.
 
-    Step 1: First confirm you have correctly identified the selected lot by its blue boundary and central "id." marker. **Crucially, ignore all other lots, non-blue boundary markings (e.g., orange property lines), or informational overlays that are not part of the selected lot's blue boundary or the road itself.**
+    Step 1: First confirm you have correctly identified the selected lot by its blue boundary and central "id." marker. **Crucially, ignore all other lots, non-blue boundary markings (e.g., orange property lines), or informational overlays (such as thin grey/brown contour lines, often with numbers), that are not part of the selected lot's blue boundary or the road itself.**
 
-    Step 2: Thoroughly inspect the interior of the selected lot and its entire perimeter for any road. A road is defined as any clearly distinguishable linear or **curvilinear** path that appears suitable for vehicular traffic (cars, trucks, construction equipment, etc.). **As observed in the current image example, roads typically appear as a distinct, consistent width stretch of white or very light-colored, paved, or uniformly textured surface, characterized by clear edges.** This appearance may include textual labels (e.g., "N Shiloh Rd"). **Note that other property lines, often depicted in orange, are NOT part of the road itself and must be ignored when identifying the road.** This explicitly includes public roads, private roads, driveways, access lanes, or easements — even if unpaved or newly graded. Look for named roads or unnamed, but clearly defined, vehicular paths.
+    Step 2: Thoroughly inspect the interior of the selected lot and its entire perimeter for any road. A road is defined as any clearly distinguishable linear or **curvilinear** path that appears suitable for vehicular traffic (cars, trucks, construction equipment, etc.). **As observed in the current image example, roads typically appear as a distinct, consistent and significant width, stretch of white ,very light-colored, or light yellow, paved, or uniformly textured surface, characterized by clear edges.** This appearance may include textual labels (e.g., "N Shiloh Rd"). **Note that other property lines, often depicted in orange, are NOT part of the road itself and must be ignored when identifying the road.** This explicitly includes public roads, private roads, driveways, access lanes, or easements — even if unpaved or newly graded. Look for named roads or unnamed, but clearly defined, vehicular paths.
 
     Step 3: Determine if a qualifying road (as defined in Step 2) lies **within** the selected lot boundaries OR is **immediately adjacent** to the selected lot.
     - 'Immediately adjacent' means the road either:

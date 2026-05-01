@@ -107,8 +107,7 @@ exports.handler = async (event, context) => {
       - Directly touches any portion of the blue boundary line, OR
       - Is separated from the blue boundary by only a very narrow strip (such as a sidewalk, curb, grass verge, drainage ditch, or similar negligible barrier that does not impede direct access).
       - To estimate 'immediately adjacent' use this clear rule of thumb: the visible gap between the road edge and the blue boundary line must be **less than 2 times the visible width of that specific road** in the image (this accounts for scale and perspective distortion). If the gap is larger, it is NOT immediately adjacent.
-      - In additon, an 'immediately adjacent' road must be running parallel to the blue boundary line at the point of closest proximity. A road that is perpendicular or at a sharp angle to the blue boundary, even if close, does not meet the 'immediately adjacent' criterion.
-
+      - In addition, an 'immediately adjacent' road must be running parallel to the blue boundary line at the point of closest proximity. A road that is perpendicular or at a sharp angle to the blue boundary, even if close, does not meet the 'immediately adjacent' criterion.
     Step 4: If any part of a qualifying road meets the above criteria (inside or immediately adjacent), the answer is Yes. Otherwise, it is No. Base your decision strictly on visible evidence in the image. If image quality is poor or features are ambiguous, default to No and explain why in your reasoning.
 
     Respond in this exact format — do not deviate:
@@ -128,16 +127,40 @@ exports.handler = async (event, context) => {
     The JSON must be valid, properly formatted, and contain only the "AvailableRoad" key with "Yes" or "No".
 `;
 
+const roadAvailabilityPrompt2 = `
+
+Act as an experienced real estate investor and professional land surveyor. 
+
+Focus exclusively on the map portion of the provided screenshot (ignore any code or text editor panels). Locate the primary highlighted lot, which is denoted by the shaded polygon.
+
+Once you have identified the lot boundaries:
+Examine the area strictly **inside** the polygon. Determine whether there is a physical road that intersects or lies within the enclosed boundary of the lot. Do NOT count roads that are merely adjacent, touching the exterior outline, or running outside the property lines.
+
+Respond in this exact format:
+1. Provide your full reasoning and analysis based only on what is inside the lot boundaries.
+2. Add two blank newlines.
+3. Output the separator: -----------
+4. Add two more blank newlines.
+5. Output a valid JSON object in this exact structure (use string values "Yes" or "No" only):
+\`\`\`json
+{
+  "AvailableRoad": "Yes|No"
+}
+\`\`\`
+The JSON must be valid, properly formatted, and contain only the "AvailableRoad" key with "Yes" or "No".
+
+`;
+
   let promises = [];
   let myObjs = [];
-  let contourFile; // well use waterURL
+  let roadFile;
   // ID	ContourURL	WaterURL	ContourResponse	WaterResponse	RoadResponse	POINTS	calculatedPerimeterFeet	 calcFrontage	Frontage
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
-    if (obj.ContourURL) {
-      contourFile = obj.ContourURL;
-      console.log("Contour File: " + contourFile);
-      promises.push(openRouterApiRequest(contourFile, roadAvailabilityPrompt));
+    if (obj.RoadURL) {
+      roadFile = obj.RoadURL;
+      console.log("Road File: " + roadFile);
+      promises.push(openRouterApiRequest(roadFile, roadAvailabilityPrompt2));
       myObjs.push(obj);
     }
   }

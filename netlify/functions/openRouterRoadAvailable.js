@@ -159,13 +159,15 @@ The JSON must be valid, properly formatted, and contain only the "AvailableRoad"
   let promises = [];
   let myObjs = [];
   let roadFile;
+  let promiseIndices = [];
   // ID	ContourURL	WaterURL	ContourResponse	WaterResponse	RoadResponse	POINTS	calculatedPerimeterFeet	 calcFrontage	Frontage
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
-    if (obj.RoadURL.includes("dropbox")) {
+    if (obj.RoadURL && obj.RoadURL.includes("dropbox")) {
       roadFile = obj.RoadURL;
       console.log("Road File: " + roadFile);
       promises.push(openRouterApiRequest(roadFile, roadAvailabilityPrompt2));
+      promiseIndices.push(myObjs.length);
       myObjs.push(obj);
     }
     else {
@@ -181,15 +183,19 @@ The JSON must be valid, properly formatted, and contain only the "AvailableRoad"
   console.log("Results:", results);
 
   let output = [];
-  for (let i = 0; i < myObjs.length; i++) {
-    let myObj = myObjs[i];
+  for (let i = 0; i < results.length; i++) {
+    const objIndex = promiseIndices[i];
+    const myObj = myObjs[objIndex];
     const result = results[i];
     if (result.status === "fulfilled") {
       myObj.RoadAvailable = result.value;
     } else if (result.status === "rejected") {
       myObj.RoadAvailable = "Error: " + result.reason.message;
     }
-    output.push(myObj);
+  }
+
+  for (let i = 0; i < myObjs.length; i++) {
+    output.push(myObjs[i]);
   }
 
   console.log("here is the returned array");

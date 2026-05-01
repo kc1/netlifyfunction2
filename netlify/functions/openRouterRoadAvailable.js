@@ -127,14 +127,19 @@ exports.handler = async (event, context) => {
     The JSON must be valid, properly formatted, and contain only the "AvailableRoad" key with "Yes" or "No".
 `;
 
-const roadAvailabilityPrompt2 = `
+  const roadAvailabilityPrompt2 = `
 
-Act as an experienced real estate investor and professional land surveyor. 
+Act as an experienced real estate investor and professional land surveyor, with expertise in maps and GIS. 
 
-Focus exclusively on the map portion of the provided screenshot (ignore any code or text editor panels). Locate the primary highlighted lot, which is denoted by the shaded polygon.
+Step 1: Focus exclusively on the map portion of the provided screenshot (ignore any code or text editor panels). Locate the primary highlighted lot, which is a light gray polygon with a thin,
+consistent width black border.
+
+Step 2: Thoroughly inspect the interior of the selected lot and its entire perimeter for any road. A road is defined as any clearly distinguishable linear or **curvilinear** path that appears suitable for vehicular traffic (cars, trucks, construction equipment, etc.). **As observed in the current image example, roads typically appear as a distinct, consistent and significant width, stretch of dark gray, characterized by clear edges.** This appearance may include textual labels (e.g., "N Shiloh Rd"). **Note that other property lines, often depicted in orange, are NOT part of the road itself and must be ignored when identifying the road.** This explicitly includes public roads, private roads, driveways, access lanes, or easements — even if unpaved or newly graded. Look for named roads or unnamed, but clearly defined, vehicular paths.
 
 Once you have identified the lot boundaries:
-Examine the area strictly **inside** the polygon. Determine whether there is a physical road that intersects or lies within the enclosed boundary of the lot. Do NOT count roads that are merely adjacent, touching the exterior outline, or running outside the property lines.
+Examine the area strictly **inside** the polygon. Determine whether there is a physical road that intersects or lies within or partly within the enclosed boundary of the lot. Do NOT count roads that are adjacent, or running outside the property lines.
+
+Be aware that the image may contain other visual elements such as other property lines (e.g., orange lines), non-selected parcel markings, or informational overlays. These are **not relevant** to your primary task of assessing the selected lot for road access and should be disregarded for that purpose. Your focus is strictly on the selected blue-bordered lot and its immediate surroundings for road identification.
 
 Respond in this exact format:
 1. Provide your full reasoning and analysis based only on what is inside the lot boundaries.
@@ -157,10 +162,15 @@ The JSON must be valid, properly formatted, and contain only the "AvailableRoad"
   // ID	ContourURL	WaterURL	ContourResponse	WaterResponse	RoadResponse	POINTS	calculatedPerimeterFeet	 calcFrontage	Frontage
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
-    if (obj.RoadURL) {
+    if (obj.RoadURL.includes("dropbox")) {
       roadFile = obj.RoadURL;
       console.log("Road File: " + roadFile);
       promises.push(openRouterApiRequest(roadFile, roadAvailabilityPrompt2));
+      myObjs.push(obj);
+    }
+    else {
+      console.log("No Road File for object with ID: " + obj.ID);
+      obj.RoadAvailable = "No Road File";
       myObjs.push(obj);
     }
   }

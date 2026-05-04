@@ -89,51 +89,21 @@ exports.handler = async (event, context) => {
   const objArr = JSON.parse(event.body);
   console.log("Received array of spreadsheet row objects:", objArr);
 
-    const roadAvailabilityPrompt2 = `
-
-Act as an experienced real estate investor and professional land surveyor, with expertise in maps and GIS. 
-
-Step 1: Focus exclusively on the map portion of the provided screenshot (ignore any code or text editor panels). Locate the primary highlighted lot, which is a light gray polygon with a thin,
-consistent width black border.
-
-Step 2: Thoroughly inspect the interior of the selected lot and its entire perimeter for any road. A road is defined as any clearly distinguishable linear or **curvilinear** path that appears suitable for vehicular traffic (cars, trucks, construction equipment, etc.). **As observed in the current image example, roads typically appear as a distinct, consistent and significant width, stretch of dark gray, characterized by clear edges.** This appearance may include textual labels (e.g., "N Shiloh Rd"). **Note that other property lines, often depicted in orange, are NOT part of the road itself and must be ignored when identifying the road.** This explicitly includes public roads, private roads, driveways, access lanes, or easements — even if unpaved or newly graded. Look for named roads or unnamed, but clearly defined, vehicular paths.
-
-Once you have identified the lot boundaries:
-Examine the area strictly **inside** the polygon. Determine whether there is a physical road that intersects or lies within or partly within the enclosed boundary of the lot. Do NOT count roads that are adjacent, or running outside the property lines.
-
-Be aware that the image may contain other visual elements such as other property lines (e.g., orange lines), non-selected parcel markings, or informational overlays. These are **not relevant** to your primary task of assessing the selected lot for road access and should be disregarded for that purpose. Your focus is strictly on the selected blue-bordered lot and its immediate surroundings for road identification.
-
-Respond in this exact format:
-1. Provide your full reasoning and analysis based only on what is inside the lot boundaries.
-2. Add two blank newlines.
-3. Output the separator: -----------
-4. Add two more blank newlines.
-5. Output a valid JSON object in this exact structure (use string values "Yes" or "No" only):
-\`\`\`json
-{
-  "AvailableRoad": "Yes|No"
-}
-\`\`\`
-The JSON must be valid, properly formatted, and contain only the "AvailableRoad" key with "Yes" or "No".
-
-`;
-
   let promises = [];
   let myObjs = [];
   let roadFile;
   let promiseIndices = [];
-  
-// ID	STARTPROMPT	RoadURL	RoadAvailable	NealNotes	Status	PromptVersion	Feedback	RoadAvailable3	RoadAvailable2	RoadAvailable1	ContourResponse	WaterResponse	RoadResponse	POINTS	calculatedPerimeterFeet	calcFrontage	ContourURL	WaterURL	Frontage	LAT	LON	PARNO	ALTPARNO	calculatedAreaAcres	PPIN	OWNNAME	MAILADD1	MCITY1	MSTATE1	MZIP1	MAILADD2	MCITY2	MSTATE2	MZIP2	SITEADD	SCITY	SSTATE	SZIP	TAXACRES	GISACRES	DEEDREF	DEEDDATE	PLATREF	PLATDATE	TAXMAP	SECTION	TWSP	RANGE	TAXSTATUS	STNAME	CNTYNAME	CNTYFIPS	STFIPS	STCNTYFIPS	LANDVAL	IMPVAL1	IMPVAL2	TOTVAL	CULT_AC1	CULT_AC2	UNCULT_AC1	UNCULT_AC2	TOTAL_AC	LATDEC	LONGDEC	ZONING	LEGLDESC	TAXYEAR	INSIDE_X	INSIDE_Y	SHAPE_Leng	SHAPE_Area	name	link	property	address	parcel	taxes	taxesRaw	acres	appraisalRecordLink	assessedValueForTaxation	balanceStatus	countyTaxBalance	countyTaxDue	countyTaxPaid	improvementsValue	landValue	legalDescription	mailingAddress	ownerName	parcelNumber	reportDate	schoolTaxDue	taxSaleDocumentsLink	taxStatus	taxYear	totalAssessedValue	totalTaxBalance	totalTaxDue	totalTaxPaid	taxSaleHistory_2022_redeemed	taxSaleHistory_2022_soldTo	taxSaleHistory_2022_year	taxSaleHistory_2018_redeemed	taxSaleHistory_2018_soldTo	taxSaleHistory_2018_year	taxSaleHistory_2024_redeemed	taxSaleHistory_2024_soldTo	taxSaleHistory_2024_year		
-  
+
+  // ID	STARTPROMPT	RoadURL	RoadAvailable	NealNotes	Status	PromptVersion	Feedback	RoadAvailable3	RoadAvailable2	RoadAvailable1	ContourResponse	WaterResponse	RoadResponse	POINTS	calculatedPerimeterFeet	calcFrontage	ContourURL	WaterURL	Frontage	LAT	LON	PARNO	ALTPARNO	calculatedAreaAcres	PPIN	OWNNAME	MAILADD1	MCITY1	MSTATE1	MZIP1	MAILADD2	MCITY2	MSTATE2	MZIP2	SITEADD	SCITY	SSTATE	SZIP	TAXACRES	GISACRES	DEEDREF	DEEDDATE	PLATREF	PLATDATE	TAXMAP	SECTION	TWSP	RANGE	TAXSTATUS	STNAME	CNTYNAME	CNTYFIPS	STFIPS	STCNTYFIPS	LANDVAL	IMPVAL1	IMPVAL2	TOTVAL	CULT_AC1	CULT_AC2	UNCULT_AC1	UNCULT_AC2	TOTAL_AC	LATDEC	LONGDEC	ZONING	LEGLDESC	TAXYEAR	INSIDE_X	INSIDE_Y	SHAPE_Leng	SHAPE_Area	name	link	property	address	parcel	taxes	taxesRaw	acres	appraisalRecordLink	assessedValueForTaxation	balanceStatus	countyTaxBalance	countyTaxDue	countyTaxPaid	improvementsValue	landValue	legalDescription	mailingAddress	ownerName	parcelNumber	reportDate	schoolTaxDue	taxSaleDocumentsLink	taxStatus	taxYear	totalAssessedValue	totalTaxBalance	totalTaxDue	totalTaxPaid	taxSaleHistory_2022_redeemed	taxSaleHistory_2022_soldTo	taxSaleHistory_2022_year	taxSaleHistory_2018_redeemed	taxSaleHistory_2018_soldTo	taxSaleHistory_2018_year	taxSaleHistory_2024_redeemed	taxSaleHistory_2024_soldTo	taxSaleHistory_2024_year
+
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
-      roadFile = obj.RoadURL;
-      const prompt = obj.STARTPROMPT;
-      console.log("Road File: " + roadFile);
-      promises.push(openRouterApiRequest(roadFile, prompt));
-      promiseIndices.push(myObjs.length);
-      myObjs.push(obj);
-    }
+    roadFile = obj.RoadURL;
+    const prompt = obj.STARTPROMPT;
+    console.log("Road File: " + roadFile);
+    promises.push(openRouterApiRequest(roadFile, prompt));
+    promiseIndices.push(myObjs.length);
+    myObjs.push(obj);
   }
 
   console.log("Promises:", promises);
@@ -149,7 +119,7 @@ The JSON must be valid, properly formatted, and contain only the "AvailableRoad"
     if (result.status === "fulfilled") {
       myObj.RoadAvailable = result.value;
     } else if (result.status === "rejected") {
-      myObj.RoadAvailable = "Error" ;
+      myObj.RoadAvailable = "Error";
     }
   }
 

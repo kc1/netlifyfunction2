@@ -20,6 +20,7 @@
   "homepage": "https://github.com/kc1/netlifyfunction2#readme",
   "dependencies": {
     "@langchain/openai": "^0.5.16",
+    "@turf/buffer": "^7.3.5",
     "axios": "^1.7.9",
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.4.7",

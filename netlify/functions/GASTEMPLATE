@@ -1,0 +1,75 @@
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet1');
+  // const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Sheet2');
+
+
+
+  const currentSheetObjArr = sheet2Json(sheet);
+  Logger.log("length: " + currentSheetObjArr.length);
+
+
+  const payload = currentSheetObjArr.filter(x => {
+    if (x.ContourURL == "" || x.WaterURL == "") { return x }
+
+  })
+  let firstFiftyPushedRows = payload.slice(0, numberToPush);// get first 50 or less
+
+
+  // Updated payload: Wrap the array and collection name in an object
+  var options = {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify({
+      data: firstFiftyPushedRows,  // The array of objects
+      collectionName: collection  // The collection name as a string
+    }),
+    muteHttpExceptions: true
+  };
+
+
+  Logger.log(firstFiftyPushedRows);
+  Logger.log(typeof (firstFiftyPushedRows))
+
+  // const url = 'https://www.postb.in/1739670263592-0602835712488';
+  let url = 'https://nimble-dieffenbachia-92e8e2.netlify.app/.netlify/functions/updateNamedBucket';
+
+  Logger.log(url);
+
+
+  Logger.log(options);
+
+
+  try {
+    // Make the API request
+    const response = UrlFetchApp.fetch(url, options);
+
+    // Parse the JSON response if it is JSON
+    var result = JSON.parse(response.getContentText());
+
+    // Log the result
+
+    const myRows = result.message;
+    Logger.log(myRows);
+    for (var i = 0; i < myRows.length; i++) {
+
+      const myRow = myRows[i];
+    }
+
+// ------------------------------------------------------------------
+
+exports.handler = async function (event, context) {
+  
+  // Parse the request body as an object
+  const requestData = JSON.parse(event.body);
+  const myObjArray = requestData.data; // The array of objects
+  const collectionName = requestData.collectionName; // The collection name
+
+  console.log("Received data:", myObjArray);
+  console.log("Received collection name:", collectionName);
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: longUrl,
+    }),
+  };
+};

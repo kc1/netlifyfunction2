@@ -39,6 +39,7 @@ async function createUniqueIndexForId(coll) {
   try {
     // Get existing indexes
     const indexes = await coll.indexes();
+    console.log("indexes: ", indexes);
     // Check if unique index on ID exists
     const indexExists = indexes.some(index => index.key.ID === 1 && index.unique === true);
     if (indexExists) {
@@ -60,9 +61,9 @@ exports.handler = async function (event, context) {
   // console.log("event: ", event);
 
   // Parse the request body as an object
-  const requestData = JSON.parse(event.body);
-  const myObjArray = requestData.data; // The array of objects
-  const collectionName = requestData.collectionName; // The collection name
+  const bodyObject = JSON.parse(event.body);
+  const myObjArray = bodyObject.payload.data; // The array of objects
+  const collectionName = bodyObject.payload.collectionName; // The collection name
   let collection = database.collection(collectionName);
 
   console.log("Received data:", myObjArray);

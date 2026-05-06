@@ -99,11 +99,14 @@ exports.handler = async (event, context) => {
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
     roadFile = obj.RoadURL;
-    const prompt = obj.STARTPROMPT;
+    const prompt = obj.PROMPT;
     console.log("Road File: " + roadFile);
+    console.log("Prompt: " + prompt);
+    if  (roadFile.includes("http") && prompt.length > 0) {
     promises.push(openRouterApiRequest(roadFile, prompt));
     promiseIndices.push(myObjs.length);
     myObjs.push(obj);
+    }
   }
 
   console.log("Promises:", promises);

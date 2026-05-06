@@ -63,8 +63,8 @@ exports.handler = async function (event, context) {
   // Parse the request body as an object
   const bodyObject = JSON.parse(event.body);
   console.log("Parsed body object:", bodyObject);
-  const myObjArray = bodyObject.payload.data; // The array of objects
-  const collectionName = bodyObject.payload.collectionName; // The collection name
+  const myObjArray = bodyObject.data; // The array of objects
+  const collectionName = bodyObject.collectionName; // The collection name
   let collection = database.collection(collectionName);
 
   console.log("Received data:", myObjArray);

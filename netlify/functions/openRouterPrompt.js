@@ -86,52 +86,38 @@ async function openRouterApiRequest(imageLink, myPrompt) {
 exports.handler = async (event, context) => {
   console.log("Hello from Netlify Function!");
 
-  const objArr = JSON.parse(event.body);
-  console.log("Received array of spreadsheet row objects:", objArr);
+  const obj = JSON.parse(event.body);
+  console.log("Received a spreadsheet row object:", obj);
 
-  let promises = [];
-  let myObjs = [];
-  let roadFile;
-  let promiseIndices = [];
+/*   const payload = {
+    task: "refine_prompt",
+    imageUrl: row.RoadURL,
+    prompt: optimizerPrompt,        // ← This is what gets sent to the model
+    currentPrompt: row.PROMPT,      // Optional: for reference
+    wrongAnswer: row.RoadAvailable,
+    correctAnswer: row.NealNotes,
+    rowId: row.ID
+  }; */
 
 // ID	RoadURL	PROMPT	RoadAvailable	NealNotes	Status1	PromptVersion	Feedback
   
-  for (let i = 0; i < objArr.length; i++) {
-    const obj = objArr[i];
-    roadFile = obj.RoadURL;
-    const prompt = obj.PROMPT;
+    const roadFile = obj.RoadURL;
+    const prompt = obj.prompt;
     console.log("Road File: " + roadFile);
     console.log("Prompt: " + prompt);
-    if  (roadFile.includes("http") && prompt.length > 0) {
-    promises.push(openRouterApiRequest(roadFile, prompt));
-    promiseIndices.push(myObjs.length);
-    myObjs.push(obj);
+    if (roadFile.includes("http") && prompt.length > 0) {
+      try {
+        const result = await openRouterApiRequest(roadFile, prompt);
+        obj.RoadAvailable = result;
+      } catch (e) {
+        obj.RoadAvailable = "Error";
+      }
     }
-  }
 
-  console.log("Promises:", promises);
+    let output = obj;
 
-  const results = await Promise.allSettled(promises);
-  console.log("Results:", results);
-
-  let output = [];
-  for (let i = 0; i < results.length; i++) {
-    const objIndex = promiseIndices[i];
-    const myObj = myObjs[objIndex];
-    const result = results[i];
-    if (result.status === "fulfilled") {
-      myObj.RoadAvailable = result.value;
-    } else if (result.status === "rejected") {
-      myObj.RoadAvailable = "Error";
-    }
-  }
-
-  for (let i = 0; i < myObjs.length; i++) {
-    output.push(myObjs[i]);
-  }
-
-  console.log("here is the returned array");
-  console.log(JSON.stringify(output));
+    console.log("here is the returned object");
+    console.log(JSON.stringify(output));
 
   return {
     statusCode: 200,

@@ -94,8 +94,8 @@ exports.handler = async (event, context) => {
   let roadFile;
   let promiseIndices = [];
 
-  // ID	STARTPROMPT	RoadURL	RoadAvailable	NealNotes	Status	PromptVersion	Feedback	RoadAvailable3	RoadAvailable2	RoadAvailable1	ContourResponse	WaterResponse	RoadResponse	POINTS	calculatedPerimeterFeet	calcFrontage	ContourURL	WaterURL	Frontage	LAT	LON	PARNO	ALTPARNO	calculatedAreaAcres	PPIN	OWNNAME	MAILADD1	MCITY1	MSTATE1	MZIP1	MAILADD2	MCITY2	MSTATE2	MZIP2	SITEADD	SCITY	SSTATE	SZIP	TAXACRES	GISACRES	DEEDREF	DEEDDATE	PLATREF	PLATDATE	TAXMAP	SECTION	TWSP	RANGE	TAXSTATUS	STNAME	CNTYNAME	CNTYFIPS	STFIPS	STCNTYFIPS	LANDVAL	IMPVAL1	IMPVAL2	TOTVAL	CULT_AC1	CULT_AC2	UNCULT_AC1	UNCULT_AC2	TOTAL_AC	LATDEC	LONGDEC	ZONING	LEGLDESC	TAXYEAR	INSIDE_X	INSIDE_Y	SHAPE_Leng	SHAPE_Area	name	link	property	address	parcel	taxes	taxesRaw	acres	appraisalRecordLink	assessedValueForTaxation	balanceStatus	countyTaxBalance	countyTaxDue	countyTaxPaid	improvementsValue	landValue	legalDescription	mailingAddress	ownerName	parcelNumber	reportDate	schoolTaxDue	taxSaleDocumentsLink	taxStatus	taxYear	totalAssessedValue	totalTaxBalance	totalTaxDue	totalTaxPaid	taxSaleHistory_2022_redeemed	taxSaleHistory_2022_soldTo	taxSaleHistory_2022_year	taxSaleHistory_2018_redeemed	taxSaleHistory_2018_soldTo	taxSaleHistory_2018_year	taxSaleHistory_2024_redeemed	taxSaleHistory_2024_soldTo	taxSaleHistory_2024_year
-
+// ID	RoadURL	PROMPT	RoadAvailable	NealNotes	Status1	PromptVersion	Feedback
+  
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
     roadFile = obj.RoadURL;

@@ -101,23 +101,23 @@ exports.handler = async (event, context) => {
 
 // ID	RoadURL	PROMPT	RoadAvailable	NealNotes	Status1	PromptVersion	Feedback
   
+    let result;
     const roadFile = obj.RoadURL;
     const prompt = obj.prompt;
     console.log("Road File: " + roadFile);
     console.log("Prompt: " + prompt);
     if (roadFile.includes("http") && prompt.length > 0) {
       try {
-        const result = await openRouterApiRequest(roadFile, prompt);
+        result = await openRouterApiRequest(roadFile, prompt);
         obj.RoadAvailable = result;
       } catch (e) {
-        obj.RoadAvailable = "Error";
+        result = "Error";
       }
     }
 
-    let output = obj;
 
-    console.log("here is the returned object");
-    console.log(JSON.stringify(output));
+    console.log("here is the returned result: ");
+    console.log(JSON.stringify(obj));
 
   return {
     statusCode: 200,
@@ -126,7 +126,7 @@ exports.handler = async (event, context) => {
     },
     body: JSON.stringify({
       message: "Processed results",
-      results: JSON.stringify(output),
+      results: obj,
     }),
   };
 };

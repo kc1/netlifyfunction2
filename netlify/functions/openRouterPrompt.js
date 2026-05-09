@@ -67,21 +67,24 @@ exports.handler = async (event, context) => {
 // ID	RoadURL	PROMPT	RoadAvailable	NealNotes	Status1	PromptVersion	Feedback
   
     let result;
-    const roadFile = obj.RoadURL;
-    const prompt = obj.prompt;
-    const model = obj.model || "google/gemini-2.5-flash"; // default if not provided
+    const roadFile = obj.RoadURL || obj.roadURL || "";
+    const prompt = obj.prompt || obj.PROMPT || "";
+    const model = obj.model || obj.Model || "google/gemini-2.5-flash"; // default if not provided
     console.log("Road File: " + roadFile);
     console.log("Prompt: " + prompt);
     console.log("Model: " + model);
-    if (roadFile.includes("http") && prompt.length > 0) {
+    if (roadFile && roadFile.includes("http") && prompt && prompt.length > 0) {
       try {
         result = await openRouterApiRequest(roadFile, prompt, model);
         obj.RoadAvailable = result;
       } catch (e) {
+        console.error("OpenRouter request failed:", e);
         result = "Error";
       }
+    } else {
+      console.warn("Missing or invalid RoadURL/prompt in request body.", obj);
+      result = { error: "Missing or invalid RoadURL/prompt" };
     }
-
 
     console.log("here is the returned result: ");
     console.log(JSON.stringify(result));

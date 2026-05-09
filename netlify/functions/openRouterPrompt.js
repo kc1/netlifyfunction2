@@ -1,39 +1,14 @@
 const fetch = require("node-fetch");
-// model: "google/gemini-2.5-flash",
-// model: "google/gemini-2.5-flash-preview-09-2025",
-// "model": "google/gemini-3-flash-preview",
 
-async function openRouterApiRequest(imageLink, myPrompt) {
+async function openRouterApiRequest(imageLink, myPrompt, model) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   // console.log("API Key:", apiKey);
   // Replace apiKey above with a secure value in production
 
-  // model: "google/gemini-2.5-flash-lite",
-  // model: "google/gemini-2.5-flash-lite-preview-09-2025",
-  // const imageUrl = "https://drive.google.com/thumbnail?sz=w1000&id=1cpHMDtvv5xoEMYqe2PdQZBpIrZIKuoba";
-  // include_reasoning: true,
-  /* reasoning: {
-      max_tokens: 1000,
-    // } */
-
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
 
-  /*   const payload = {
-    model: "google/gemma-4-26b-a4b-it",
-    reasoning: { enabled: true },
-    messages: [
-      {
-        role: "user",
-        content: [
-          { type: "text", text: myPrompt },
-          { type: "image_url", image_url: { url: imageLink } },
-        ],
-      },
-    ],
-  };
- */
   const payload = {
-    model: "google/gemini-2.5-flash",
+    model: model,
     messages: [
       {
         role: "user",
@@ -89,26 +64,18 @@ exports.handler = async (event, context) => {
   const obj = JSON.parse(event.body);
   console.log("Received a spreadsheet row object:", obj);
 
-/*   const payload = {
-    task: "refine_prompt",
-    imageUrl: row.RoadURL,
-    prompt: optimizerPrompt,        // ← This is what gets sent to the model
-    currentPrompt: row.PROMPT,      // Optional: for reference
-    wrongAnswer: row.RoadAvailable,
-    correctAnswer: row.NealNotes,
-    rowId: row.ID
-  }; */
-
 // ID	RoadURL	PROMPT	RoadAvailable	NealNotes	Status1	PromptVersion	Feedback
   
     let result;
     const roadFile = obj.RoadURL;
     const prompt = obj.prompt;
+    const model = obj.model || "google/gemini-2.5-flash"; // default if not provided
     console.log("Road File: " + roadFile);
     console.log("Prompt: " + prompt);
+    console.log("Model: " + model);
     if (roadFile.includes("http") && prompt.length > 0) {
       try {
-        result = await openRouterApiRequest(roadFile, prompt);
+        result = await openRouterApiRequest(roadFile, prompt, model);
         obj.RoadAvailable = result;
       } catch (e) {
         result = "Error";

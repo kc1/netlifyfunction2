@@ -130,13 +130,13 @@ exports.handler = async (event, context) => {
     }
 
     console.log("here is the returned result: ");
-    console.log(JSON.stringify(result));
-
+    // console.log(JSON.stringify(result));
+    console.log(result);
   return {
     statusCode: 200,
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(result),
+    body: result,
   };
 }

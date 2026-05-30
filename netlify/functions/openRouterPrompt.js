@@ -126,6 +126,11 @@ exports.handler = async (event, context) => {
 
     let result;
     const roadFileRaw = obj.RoadURL || obj.roadURL || "";
+    // Accept screenshotURL variants (newer prompt sources may send this)
+    const screenshotRaw =
+      obj.ScreenshotURL || obj.screenshotURL || obj.screenshotUrl || obj.screenshot || "";
+    // prefer screenshotRaw when provided, otherwise fall back to roadFileRaw
+    const imageSourceRaw = screenshotRaw || roadFileRaw;
     const promptPlain =
       (typeof obj.prompt === "string" && obj.prompt) ||
       (typeof obj.PROMPT === "string" && obj.PROMPT) ||
@@ -140,13 +145,14 @@ exports.handler = async (event, context) => {
     const task = (obj.Task || obj.task || "").trim();
     const taskSlug = task.toLowerCase().replace(/-/g, "_");
     const taskCompact = task.replace(/[\s_-]/gi, "").toLowerCase();
-    const vision = hasVisionInput(roadFileRaw, promptForModel);
+    const vision = hasVisionInput(imageSourceRaw, promptForModel);
     console.log(
       "Road (raw/normalized)",
       JSON.stringify({
-        raw: String(roadFileRaw).substring(0, 120),
+        raw: String(imageSourceRaw).substring(0, 120),
         normalized: vision.roadNormalized.substring(0, 120),
         visionOk: vision.ok,
+        source: screenshotRaw ? "screenshotURL" : "roadURL",
       }),
     );
     console.log(
@@ -168,23 +174,22 @@ exports.handler = async (event, context) => {
 
     try {
       if (vision.ok) {
-        result = await openRouterApiRequest(
-          vision.roadNormalized || normalizeImageUrl(roadFileRaw),
-          promptForModel,
-          model,
-        );
-        obj.RoadAvailable = result;
+        const imageToUse = vision.roadNormalized || normalizeImageUrl(imageSourceRaw);
+        result = await openRouterApiRequest(imageToUse, promptForModel, model);
+        if (screenshotRaw) {
+          obj.ScreenshotAvailable = result;
+        } else {
+          obj.RoadAvailable = result;
+        }
       } else if (textOnlyAllowed && promptForModel.length > 0) {
         console.warn(
           "Vision inputs missing or unusable URL; falling back to text-only (task=%s)",
           task || "(none)",
         );
         result = await openRouterTextOnlyRequest(promptForModel, model);
-        if (
-          !(task === "create_unified_prompt" || task === "text_only") &&
-          typeof result === "string"
-        ) {
-          obj.RoadAvailable = result;
+        if (typeof result === "string") {
+          if (screenshotRaw) obj.ScreenshotAvailable = result;
+          else if (!(task === "create_unified_prompt" || task === "text_only")) obj.RoadAvailable = result;
         }
       } else {
         console.warn("Missing or invalid RoadURL/prompt in request body.", {

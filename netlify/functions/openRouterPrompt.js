@@ -13,13 +13,6 @@ function normalizeImageUrl(raw) {
   return s;
 }
 
-function hasVisionInput(roadRaw, promptText) {
-  const road = normalizeImageUrl(roadRaw);
-  const p = typeof promptText === "string" ? promptText.trim() : "";
-  const ok = Boolean(road && /^https?:\/\//i.test(road) && p.length > 0);
-  return { ok, roadNormalized: road, prompt: p };
-}
-
 async function openRouterApiRequest(imageLink, myPrompt, model) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   // console.log("API Key:", apiKey);
@@ -78,32 +71,6 @@ async function openRouterApiRequest(imageLink, myPrompt, model) {
   }
 }
 
-async function openRouterTextOnlyRequest(myPrompt, model) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
-  const payload = {
-    model: model,
-    messages: [{ role: "user", content: myPrompt }],
-  };
-  const options = {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  };
-  try {
-    const response = await fetch(apiEndpoint, options);
-    const responseBody = await response.text();
-    console.log("Text-only Response Code:", response.status);
-    const jsonResponse = JSON.parse(responseBody);
-    return jsonResponse.choices[0].message.content;
-  } catch (e) {
-    console.error("Text-only OpenRouter failed:", e.message);
-  }
-}
-
 exports.handler = async (event, context) => {
   console.log("Hello from Netlify Function!");
 
@@ -129,80 +96,37 @@ exports.handler = async (event, context) => {
     // Accept screenshotURL variants (newer prompt sources may send this)
     const screenshotRaw =
       obj.ScreenshotURL || obj.screenshotURL || obj.screenshotUrl || obj.screenshot || "";
-    // prefer screenshotRaw when provided, otherwise fall back to roadFileRaw
+    // Prefer screenshotRaw when provided, otherwise fall back to roadFileRaw
     const imageSourceRaw = screenshotRaw || roadFileRaw;
     const promptPlain =
       (typeof obj.prompt === "string" && obj.prompt) ||
       (typeof obj.PROMPT === "string" && obj.PROMPT) ||
       (typeof obj.Prompt === "string" && obj.Prompt) ||
       "";
-    const promptForModel =
-      promptPlain.trim() ||
-      (obj.promptBody && String(obj.promptBody)) ||
-      (obj.message && String(obj.message)) ||
-      "";
+    const promptForModel = promptPlain.trim();
     const model = obj.model || obj.Model || "google/gemini-2.5-flash"; // default if not provided
-    const task = (obj.Task || obj.task || "").trim();
-    const taskSlug = task.toLowerCase().replace(/-/g, "_");
-    const taskCompact = task.replace(/[\s_-]/gi, "").toLowerCase();
-    const vision = hasVisionInput(imageSourceRaw, promptForModel);
+    const imageToUse = normalizeImageUrl(imageSourceRaw);
+
     console.log(
-      "Road (raw/normalized)",
+      "Image request",
       JSON.stringify({
         raw: String(imageSourceRaw).substring(0, 120),
-        normalized: vision.roadNormalized.substring(0, 120),
-        visionOk: vision.ok,
+        normalized: imageToUse.substring(0, 120),
         source: screenshotRaw ? "screenshotURL" : "roadURL",
       }),
     );
-    console.log(
-      "Prompt length:",
-      promptForModel.length,
-      "model:",
-      model,
-      "task:",
-      JSON.stringify(task),
-    );
-
-    const textOnlyAllowed =
-      taskSlug === "create_unified_prompt" ||
-      taskSlug === "text_only" ||
-      taskSlug === "refine_prompt" ||
-      taskCompact === "createunifiedprompt" ||
-      obj.textOnly === true ||
-      obj.text_only === true;
+    console.log("Prompt length:", promptForModel.length, "model:", model);
 
     try {
-      if (vision.ok) {
-        const imageToUse = vision.roadNormalized || normalizeImageUrl(imageSourceRaw);
-        result = await openRouterApiRequest(imageToUse, promptForModel, model);
-        if (screenshotRaw) {
-          obj.ScreenshotAvailable = result;
-        } else {
-          obj.RoadAvailable = result;
-        }
-      } else if (textOnlyAllowed && promptForModel.length > 0) {
-        console.warn(
-          "Vision inputs missing or unusable URL; falling back to text-only (task=%s)",
-          task || "(none)",
-        );
-        result = await openRouterTextOnlyRequest(promptForModel, model);
-        if (typeof result === "string") {
-          if (screenshotRaw) obj.ScreenshotAvailable = result;
-          else if (!(task === "create_unified_prompt" || task === "text_only")) obj.RoadAvailable = result;
-        }
+      result = await openRouterApiRequest(imageToUse, promptForModel, model);
+      if (screenshotRaw) {
+        obj.ScreenshotAvailable = result;
       } else {
-        console.warn("Missing or invalid RoadURL/prompt in request body.", {
-          visionOk: vision.ok,
-          task,
-          promptLen: promptForModel.length,
-          roadLen: String(roadFileRaw).length,
-        });
-        result = { error: "Missing or invalid RoadURL/prompt" };
+        obj.RoadAvailable = result;
       }
     } catch (e) {
       console.error("OpenRouter request failed:", e);
-      result = "Error";
+      result = { error: "OpenRouter request failed" };
     }
 
     console.log("here is the returned result: ");
@@ -215,4 +139,4 @@ exports.handler = async (event, context) => {
     },
     body: JSON.stringify(result),
   };
-};
+}

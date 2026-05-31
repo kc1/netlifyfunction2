@@ -116,6 +116,6 @@ exports.handler = async (event, context) => {
     headers: {
       "Content-Type": "application/json",
     },
-    body: output
+    body: JSON.stringify(output),
   };
 }

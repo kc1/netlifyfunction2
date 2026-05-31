@@ -10,9 +10,9 @@ async function openRouterApiRequest(imageLink, myPrompt, modelName) {
 
   // const imageUrl = "https://drive.google.com/thumbnail?sz=w1000&id=1cpHMDtvv5xoEMYqe2PdQZBpIrZIKuoba";
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
+    // model: "google/gemini-2.5-flash-lite-preview-09-2025",
   const payload = {
-    model: "google/gemini-2.5-flash-lite-preview-09-2025",
-
+    model: modelName,
     messages: [
       {
         role: "user",

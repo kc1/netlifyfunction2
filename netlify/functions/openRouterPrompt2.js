@@ -98,32 +98,24 @@ exports.handler = async (event, context) => {
 
   for (let i = 0; i < updatedObjs.length; i++) {
     let updatedRowObj = updatedObjs[i];
-    if (typeof updatedRowObj.WaterResponse === "number") {
-      const result = results[Number(updatedRowObj.WaterResponse)];
-      updatedRowObj.WaterResponse = result.value;
+    if (typeof updatedRowObj.StructuresPresent === "number") {
+      const result = results[Number(updatedRowObj.StructuresPresent)];
+      updatedRowObj.StructuresPresent = result.value;
     }
-    if (typeof updatedRowObj.ContourResponse === "number") {
-      const result = results[Number(updatedRowObj.ContourResponse)];
-      updatedRowObj.ContourResponse = result.value;
-    }
-    if (typeof updatedRowObj.RoadResponse === "number") {
-      const result = results[Number(updatedRowObj.RoadResponse)];
-      updatedRowObj.RoadResponse = result.value;
-    }
-
+    
     output.push(updatedRowObj);
   }
 
-  const responseBody = {
+  /* const responseBody = {
     message: `Successfully processed ${output.length} rows`,
     results: JSON.stringify(output), // ← Important: send as string
-  };
+  }; */
 
   return {
     statusCode: 200,
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(responseBody),
+    body: output
   };
 }

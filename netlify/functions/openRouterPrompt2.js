@@ -3,6 +3,38 @@ const fetch = require("node-fetch");
 // model: "google/gemini-2.5-flash-preview-09-2025",
 // "model": "google/gemini-3-flash-preview",
 
+/** Accept drive/dropbox style links without scheme; OpenRouter expects a usable URL string. */
+function normalizeImageUrl(raw) {
+  let s = String(raw == null ? "" : raw).trim();
+  if (!s) return "";
+  if (/^https?:\/\//i.test(s)) return s;
+  if (/^\/\//.test(s)) return "https:" + s;
+  if (/^[a-z0-9][a-z0-9+.-]*:\/\//i.test(s)) return s;
+  if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(s) || /\.(com|net|org|io|app)(\/|$)/i.test(s)) {
+    return "https://" + s.replace(/^\/+/, "");
+  }
+  return s;
+}
+
+function screenshotUrlFromRow(rowObj) {
+  return (
+    rowObj.ScreenshotURL ||
+    rowObj.screenshotURL ||
+    rowObj.screenshotUrl ||
+    rowObj.screenshot ||
+    ""
+  );
+}
+
+function promptFromRow(rowObj) {
+  const p =
+    (typeof rowObj.prompt === "string" && rowObj.prompt) ||
+    (typeof rowObj.PROMPT === "string" && rowObj.PROMPT) ||
+    (typeof rowObj.Prompt === "string" && rowObj.Prompt) ||
+    "";
+  return p.trim();
+}
+
 async function openRouterApiRequest(imageLink, myPrompt, modelName) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   // console.log("API Key:", apiKey);
@@ -48,10 +80,18 @@ async function openRouterApiRequest(imageLink, myPrompt, modelName) {
     // Parse the response as JSON
     const jsonResponse = JSON.parse(responseBody);
     console.log(jsonResponse);
-    let output = jsonResponse.choices[0].message.content;
-    return output;
+    if (!response.ok || jsonResponse.error) {
+      throw new Error(
+        jsonResponse.error?.message || `OpenRouter HTTP ${response.status}`,
+      );
+    }
+    if (!jsonResponse.choices?.[0]?.message?.content) {
+      throw new Error("OpenRouter response missing choices[0].message.content");
+    }
+    return jsonResponse.choices[0].message.content;
   } catch (e) {
-    console.error("Failed to fetch or parse response as JSON:", e.message);
+    console.error("OpenRouter request failed:", e.message);
+    throw e;
   }
 }
 
@@ -82,9 +122,17 @@ exports.handler = async (event, context) => {
 
   for (let i = 0; i < objArr.length; i++) {
     let rowObj = objArr[i];
-    const screenshotFile = rowObj.screenshotURL;
-    const prompt = rowObj.PROMPT;
-    console.log("Screenshot File: " + screenshotFile);
+    const screenshotFile = normalizeImageUrl(screenshotUrlFromRow(rowObj));
+    const prompt = promptFromRow(rowObj);
+    console.log("Screenshot File:", screenshotFile.substring(0, 120));
+    if (!screenshotFile || !prompt) {
+      console.warn(
+        `Row ${i}: skipping OpenRouter — missing ${!screenshotFile ? "image URL" : "prompt"}`,
+      );
+      rowObj.StructuresPresent = { error: "missing image URL or prompt" };
+      updatedObjs.push(rowObj);
+      continue;
+    }
     promises.push(openRouterApiRequest(screenshotFile, prompt, modelName));
     rowObj.StructuresPresent = promiseIndex;
     promiseIndex++;
@@ -96,13 +144,17 @@ exports.handler = async (event, context) => {
   const results = await Promise.allSettled(promises);
   console.log("Results:", results);
 
+  let settledIndex = 0;
   for (let i = 0; i < updatedObjs.length; i++) {
     let updatedRowObj = updatedObjs[i];
     if (typeof updatedRowObj.StructuresPresent === "number") {
-      const result = results[Number(updatedRowObj.StructuresPresent)];
-      updatedRowObj.StructuresPresent = result.value;
+      const result = results[settledIndex++];
+      updatedRowObj.StructuresPresent =
+        result.status === "fulfilled"
+          ? result.value
+          : { error: result.reason?.message || String(result.reason) };
     }
-    
+
     output.push(updatedRowObj);
   }
 

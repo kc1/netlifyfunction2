@@ -44,7 +44,8 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
 
   const payload = {
     // Use the passed modelName, fallback to Gemini 2.5 Flash
-    model: modelName || "google/gemini-2.5-flash",
+    // model: modelName || "google/gemini-2.5-flash",
+    model:"google/gemini-3.5-flash",
     // Force OpenRouter/Gemini to return a valid JSON object without markdown fences
     response_format: { type: "json_object" },
     temperature: 0.0, // Best for consistent classification

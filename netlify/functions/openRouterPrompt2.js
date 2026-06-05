@@ -10,7 +10,10 @@ function normalizeImageUrl(raw) {
   if (/^https?:\/\//i.test(s)) return s;
   if (/^\/\//.test(s)) return "https:" + s;
   if (/^[a-z0-9][a-z0-9+.-]*:\/\//i.test(s)) return s;
-  if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(s) || /\.(com|net|org|io|app)(\/|$)/i.test(s)) {
+  if (
+    /^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(s) ||
+    /\.(com|net|org|io|app)(\/|$)/i.test(s)
+  ) {
     return "https://" + s.replace(/^\/+/, "");
   }
   return s;
@@ -35,6 +38,95 @@ function promptFromRow(rowObj) {
   return p.trim();
 }
 
+async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+
+  const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
+
+  const payload = {
+    temperature: 0.0, // for consistent classification
+    model: "google/gemini-2.5-flash",
+    messages: [
+      {
+        role: "user",
+        content: [
+          // === STATIC CACHED PART (Instructions + Examples) ===
+          {
+            type: "text",
+            text: `${myPrompt}\n\nHere are some examples:\n\nExample 1:`,
+          },
+          {
+            type: "image_url",
+            image_url: { url: "https://www.dropbox.com/scl/fi/nkeiumknhqjajh9cfdon5/010418-00400-1780440917-building.png?rlkey=nd0tqq4qyn0lu3eitigpjc94i&raw=1" },
+            cache_control: { type: "ephemeral" }, // Important
+          },
+          {
+            type: "text",
+            text: "lot_found:YES , StructuresPresent:NO",
+          },
+
+          {
+            type: "text",
+            text: "Example 2:",
+          },
+          {
+            type: "image_url",
+            image_url: { url: "https://www.dropbox.com/scl/fi/c0m6wpynhpjbxh30bvc6b/010419-01800-1780441370-building.png?rlkey=jdzo979pof6bsr1t21kk0l7wx&raw=1" },
+            cache_control: { type: "ephemeral" },
+          },
+          {
+            type: "text",
+            text: "lot_found:YES , StructuresPresent:NO",
+          },
+          {
+            type: "text",
+            text: "\nNow classify this new image:",
+          },
+          {
+            type: "image_url",
+            image_url: { url: imageLink }, // This one should NOT be cached
+          },
+        ],
+      },
+    ],
+    // Optional but recommended
+    temperature: 0.0, // for consistent classification
+    max_tokens: 100,
+  };
+
+  const options = {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  };
+
+  try {
+    const response = await fetch(apiEndpoint, options);
+    const responseBody = await response.text();
+    console.log("Response Code:", response.status);
+    console.log("Response Body:", responseBody);
+
+    // Parse the response as JSON
+    const jsonResponse = JSON.parse(responseBody);
+    console.log(jsonResponse);
+    if (!response.ok || jsonResponse.error) {
+      throw new Error(
+        jsonResponse.error?.message || `OpenRouter HTTP ${response.status}`,
+      );
+    }
+    if (!jsonResponse.choices?.[0]?.message?.content) {
+      throw new Error("OpenRouter response missing choices[0].message.content");
+    }
+    return jsonResponse.choices[0].message.content;
+  } catch (e) {
+    console.error("OpenRouter request failed:", e.message);
+    throw e;
+  }
+}
+
 async function openRouterApiRequest(imageLink, myPrompt, modelName) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   // console.log("API Key:", apiKey);
@@ -42,7 +134,7 @@ async function openRouterApiRequest(imageLink, myPrompt, modelName) {
 
   // const imageUrl = "https://drive.google.com/thumbnail?sz=w1000&id=1cpHMDtvv5xoEMYqe2PdQZBpIrZIKuoba";
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
-    // model: "google/gemini-2.5-flash-lite-preview-09-2025",
+  // model: "google/gemini-2.5-flash-lite-preview-09-2025",
   const payload = {
     model: modelName,
     messages: [
@@ -95,13 +187,133 @@ async function openRouterApiRequest(imageLink, myPrompt, modelName) {
   }
 }
 
+/** Dropbox share links need raw=1 so OpenRouter can fetch image bytes. */
+function dropboxDirectImageUrl(raw) {
+  let url = normalizeImageUrl(raw);
+  if (!url || !/dropbox\.com/i.test(url)) return url;
+  url = url.replace(/([?&])dl=0\b/gi, "$1raw=1");
+  if (!/[?&]raw=1\b/i.test(url)) {
+    url += (url.includes("?") ? "&" : "?") + "raw=1";
+  }
+  return url;
+}
+
+/** Default Yes/No few-shot PNGs from Dropbox (Netlify env vars). */
+function fewShotExamplesFromEnv() {
+  const examples = [];
+  const yesUrl = process.env.OPENROUTER_FEW_SHOT_YES_URL;
+  const noUrl = process.env.OPENROUTER_FEW_SHOT_NO_URL;
+  if (yesUrl) {
+    examples.push({ imageUrl: dropboxDirectImageUrl(yesUrl), answer: "Yes" });
+  }
+  if (noUrl) {
+    examples.push({ imageUrl: dropboxDirectImageUrl(noUrl), answer: "No" });
+  }
+  return examples;
+}
+
+/**
+ * Few-shot vision request for Gemini 2.5 Flash via OpenRouter.
+ * @param {string} imageLink - Target screenshot (Dropbox or other URL)
+ * @param {string} myPrompt - Per-row classification prompt
+ * @param {string} [modelName] - OpenRouter model id (default: google/gemini-2.5-flash)
+ * @param {object} [options]
+ * @param {Array<{imageUrl?: string, url?: string, answer: string}>} [options.examples] - Few-shot pairs; defaults to env URLs
+ * @param {string} [options.systemInstruction] - Opening instruction before examples
+ */
+async function openRouterApiRequest2(
+  imageLink,
+  myPrompt,
+  modelName,
+  options = {},
+) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
+
+  const examples =
+    options.examples?.length > 0
+      ? options.examples.map((ex) => ({
+          imageUrl: dropboxDirectImageUrl(ex.imageUrl || ex.url),
+          answer: String(ex.answer).trim(),
+        }))
+      : fewShotExamplesFromEnv();
+
+  const targetUrl = dropboxDirectImageUrl(imageLink);
+  const model = modelName || "google/gemini-2.5-flash";
+
+  const exampleMessages = examples.flatMap(({ imageUrl, answer }) => [
+    {
+      role: "user",
+      content: [
+        { type: "text", text: "Example image:" },
+        { type: "image_url", image_url: { url: imageUrl } },
+      ],
+    },
+    { role: "assistant", content: answer },
+  ]);
+
+  const payload = {
+    model,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text:
+              options.systemInstruction ||
+              "You classify property screenshots. Reply with exactly one word: Yes or No.",
+          },
+        ],
+      },
+      ...exampleMessages,
+      {
+        role: "user",
+        content: [
+          { type: "text", text: myPrompt },
+          { type: "image_url", image_url: { url: targetUrl } },
+        ],
+      },
+    ],
+  };
+
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  };
+
+  try {
+    const response = await fetch(apiEndpoint, requestOptions);
+    const responseBody = await response.text();
+    console.log("Response Code:", response.status);
+    console.log("Response Body:", responseBody);
+
+    const jsonResponse = JSON.parse(responseBody);
+    console.log(jsonResponse);
+    if (!response.ok || jsonResponse.error) {
+      throw new Error(
+        jsonResponse.error?.message || `OpenRouter HTTP ${response.status}`,
+      );
+    }
+    if (!jsonResponse.choices?.[0]?.message?.content) {
+      throw new Error("OpenRouter response missing choices[0].message.content");
+    }
+    return jsonResponse.choices[0].message.content;
+  } catch (e) {
+    console.error("OpenRouter request failed:", e.message);
+    throw e;
+  }
+}
+
 exports.handler = async (event, context) => {
   console.log("Hello from Netlify Function!");
 
   const body =
-    typeof event.body === "string"
-      ? JSON.parse(event.body)
-      : event.body;
+    typeof event.body === "string" ? JSON.parse(event.body) : event.body;
 
   const objArr = Array.isArray(body) ? body : body.myrows;
   const modelName = body.model || body.modelName;
@@ -133,7 +345,7 @@ exports.handler = async (event, context) => {
       updatedObjs.push(rowObj);
       continue;
     }
-    promises.push(openRouterApiRequest(screenshotFile, prompt, modelName));
+    promises.push(openRouterApiRequest3(screenshotFile, prompt, modelName));
     rowObj.StructuresPresent = promiseIndex;
     promiseIndex++;
     updatedObjs.push(rowObj);
@@ -170,4 +382,4 @@ exports.handler = async (event, context) => {
     },
     body: JSON.stringify(output),
   };
-}
+};

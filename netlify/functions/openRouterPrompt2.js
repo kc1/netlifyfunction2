@@ -40,11 +40,14 @@ function promptFromRow(rowObj) {
 
 async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
 
   const payload = {
-    model: "google/gemini-2.5-flash",
+    // Use the passed modelName, fallback to Gemini 2.5 Flash
+    model: modelName || "google/gemini-2.5-flash", 
+    // Force OpenRouter/Gemini to return a valid JSON object without markdown fences
+    response_format: { type: "json_object" }, 
+    temperature: 0.0, // Best for consistent classification
     messages: [
       {
         role: "user",
@@ -67,7 +70,7 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
             image_url: {
               url: "https://www.dropbox.com/scl/fi/nkeiumknhqjajh9cfdon5/010418-00400-1780440917-building.png?rlkey=nd0tqq4qyn0lu3eitigpjc94i&raw=1",
             },
-            cache_control: { type: "ephemeral" }, // Important
+            cache_control: { type: "ephemeral" },
           },
         ],
       },
@@ -76,7 +79,8 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
         content: [
           {
             type: "text",
-            text: "lot_found:YES , StructuresPresent:NO",
+            // MUST MATCH YOUR JSON SCHEMA EXACTLY
+            text: `{\n  "lot_found": "YES",\n  "StructuresPresent": "NO",\n  "structures": [],\n  "notes": "No structures or building footprints are visible within the darker shaded highlighted parcel boundary."\n}`,
           },
         ],
       },
@@ -101,7 +105,8 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
         content: [
           {
             type: "text",
-            text: "lot_found:YES , StructuresPresent:NO",
+            // MUST MATCH YOUR JSON SCHEMA EXACTLY
+            text: `{\n  "lot_found": "YES",\n  "StructuresPresent": "YES",\n  "structures": [],\n  "notes": "The darker shaded lot area contains a rectangular structure."\n}`,
           },
         ],
       },
@@ -114,15 +119,12 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
           },
           {
             type: "image_url",
-            image_url: { url: imageLink }, // This one should NOT be cached
+            image_url: { url: imageLink },
           },
         ],
       },
     ],
-    // Optional but recommended
-    temperature: 0.0, // for consistent classification
   };
-  // max_tokens: 100,
 
   const options = {
     method: "POST",
@@ -136,12 +138,13 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
   try {
     const response = await fetch(apiEndpoint, options);
     const responseBody = await response.text();
-    console.log("Response Code:", response.status);
-    console.log("Response Body:", responseBody);
+    
+    // Optional: Keep for debugging, but you may want to remove these logs in production
+    // console.log("Response Code:", response.status);
+    // console.log("Response Body:", responseBody);
 
-    // Parse the response as JSON
     const jsonResponse = JSON.parse(responseBody);
-    console.log(jsonResponse);
+    
     if (!response.ok || jsonResponse.error) {
       throw new Error(
         jsonResponse.error?.message || `OpenRouter HTTP ${response.status}`,
@@ -150,6 +153,8 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
     if (!jsonResponse.choices?.[0]?.message?.content) {
       throw new Error("OpenRouter response missing choices[0].message.content");
     }
+    
+    // Returns the raw JSON string provided by the model
     return jsonResponse.choices[0].message.content;
   } catch (e) {
     console.error("OpenRouter request failed:", e.message);

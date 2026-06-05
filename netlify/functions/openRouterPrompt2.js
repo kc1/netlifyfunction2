@@ -44,9 +44,9 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
 
   const payload = {
     // Use the passed modelName, fallback to Gemini 2.5 Flash
-    model: modelName || "google/gemini-2.5-flash", 
+    model: modelName || "google/gemini-2.5-flash",
     // Force OpenRouter/Gemini to return a valid JSON object without markdown fences
-    response_format: { type: "json_object" }, 
+    response_format: { type: "json_object" },
     temperature: 0.0, // Best for consistent classification
     messages: [
       {
@@ -115,6 +115,33 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
         content: [
           {
             type: "text",
+            text: "Example 3:",
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: "https://www.dropbox.com/scl/fi/7pdpvnnpke0kbzponq6of/010420-00501-1780441811-building.png?rlkey=c5wy6oaso4mz1nfkg29n2k9cp&raw=1",
+            },
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+      },
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "text",
+            // MUST MATCH YOUR JSON SCHEMA EXACTLY
+
+            text: `{\n  "lot_found": "YES",\n  "StructuresPresent": "NO",\n  "structures": [],\n  "notes": "No structures or building footprints are visible within the darker shaded highlighted parcel boundary."\n}`,
+          },
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
             text: "Now classify this new image:",
           },
           {
@@ -138,13 +165,13 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
   try {
     const response = await fetch(apiEndpoint, options);
     const responseBody = await response.text();
-    
+
     // Optional: Keep for debugging, but you may want to remove these logs in production
     // console.log("Response Code:", response.status);
     // console.log("Response Body:", responseBody);
 
     const jsonResponse = JSON.parse(responseBody);
-    
+
     if (!response.ok || jsonResponse.error) {
       throw new Error(
         jsonResponse.error?.message || `OpenRouter HTTP ${response.status}`,
@@ -153,7 +180,7 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
     if (!jsonResponse.choices?.[0]?.message?.content) {
       throw new Error("OpenRouter response missing choices[0].message.content");
     }
-    
+
     // Returns the raw JSON string provided by the model
     return jsonResponse.choices[0].message.content;
   } catch (e) {

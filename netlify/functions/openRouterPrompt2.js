@@ -44,43 +44,73 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
 
   const payload = {
-    temperature: 0.0, // for consistent classification
     model: "google/gemini-2.5-flash",
     messages: [
       {
         role: "user",
         content: [
-          // === STATIC CACHED PART (Instructions + Examples) ===
           {
             type: "text",
-            text: `${myPrompt}\n\nHere are some examples:\n\nExample 1:`,
+            text: `${myPrompt}\n\nHere are some examples:`,
+          },
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "Example 1:",
           },
           {
             type: "image_url",
-            image_url: { url: "https://www.dropbox.com/scl/fi/nkeiumknhqjajh9cfdon5/010418-00400-1780440917-building.png?rlkey=nd0tqq4qyn0lu3eitigpjc94i&raw=1" },
+            image_url: {
+              url: "https://www.dropbox.com/scl/fi/nkeiumknhqjajh9cfdon5/010418-00400-1780440917-building.png?rlkey=nd0tqq4qyn0lu3eitigpjc94i&raw=1",
+            },
             cache_control: { type: "ephemeral" }, // Important
           },
+        ],
+      },
+      {
+        role: "assistant",
+        content: [
           {
             type: "text",
             text: "lot_found:YES , StructuresPresent:NO",
           },
-
+        ],
+      },
+      {
+        role: "user",
+        content: [
           {
             type: "text",
             text: "Example 2:",
           },
           {
             type: "image_url",
-            image_url: { url: "https://www.dropbox.com/scl/fi/c0m6wpynhpjbxh30bvc6b/010419-01800-1780441370-building.png?rlkey=jdzo979pof6bsr1t21kk0l7wx&raw=1" },
+            image_url: {
+              url: "https://www.dropbox.com/scl/fi/c0m6wpynhpjbxh30bvc6b/010419-01800-1780441370-building.png?rlkey=jdzo979pof6bsr1t21kk0l7wx&raw=1",
+            },
             cache_control: { type: "ephemeral" },
           },
+        ],
+      },
+      {
+        role: "assistant",
+        content: [
           {
             type: "text",
             text: "lot_found:YES , StructuresPresent:NO",
           },
+        ],
+      },
+      {
+        role: "user",
+        content: [
           {
             type: "text",
-            text: "\nNow classify this new image:",
+            text: "Now classify this new image:",
           },
           {
             type: "image_url",
@@ -91,8 +121,8 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
     ],
     // Optional but recommended
     temperature: 0.0, // for consistent classification
-    max_tokens: 100,
   };
+  // max_tokens: 100,
 
   const options = {
     method: "POST",

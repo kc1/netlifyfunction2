@@ -48,7 +48,10 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
     // Force OpenRouter/Gemini to return a valid JSON object without markdown fences
     response_format: { type: "json_object" },
     temperature: 0.0, // Best for consistent classification
-    reasoning: { visual: true }, // Enable visual reasoning for image inputs
+    // reasoning: { visual: true }, // Enable visual reasoning for image inputs
+    reasoning: {
+      max_tokens: 1024,
+    },
     messages: [
       {
         role: "user",

@@ -51,7 +51,7 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
     temperature: 0.0, // Best for consistent classification
     // reasoning: { visual: true }, // Enable visual reasoning for image inputs
     reasoning: {
-      max_tokens: 1024,
+      max_tokens: 2000, // Allow more tokens for detailed reasoning if needed
     },
     messages: [
       {

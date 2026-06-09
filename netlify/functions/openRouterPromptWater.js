@@ -207,8 +207,9 @@ async function openRouterApiRequest(imageLink, myPrompt, modelName) {
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
   // model: "google/gemini-2.5-flash-lite-preview-09-2025",openRouterPrompt2
   // model: modelName || "google/gemini-2.5-flash",
-  // modelName:"google/gemini-3-flash-preview";
-  modelName = "google/gemini-3.1-flash-lite"
+  modelName:"google/gemini-3-flash-preview";
+  // google/gemini-3-flash-preview
+  // modelName = "google/gemini-3.1-flash-lite"
   const payload = {
     model: modelName,
     messages: [
@@ -390,11 +391,13 @@ exports.handler = async (event, context) => {
     typeof event.body === "string" ? JSON.parse(event.body) : event.body;
 
   const objArr = Array.isArray(body) ? body : body.myrows;
-  const modelName = body.model || body.modelName;
+  // const modelName = body.model || body.modelName;
 
   if (!Array.isArray(objArr)) {
     throw new Error("Expected myrows array in request body");
   }
+  
+  let modelName = "google/gemini-3-flash-preview";
 
   console.log(`Received ${objArr.length} row objects`);
   console.log("First row sample:", JSON.stringify(objArr[0], null, 2));

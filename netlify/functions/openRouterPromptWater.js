@@ -438,7 +438,7 @@ exports.handler = async (event, context) => {
     let updatedRowObj = updatedObjs[i];
     if (typeof updatedRowObj.StructuresPresent === "number") {
       const result = results[settledIndex++];
-      updatedRowObj.Generated =
+      updatedRowObj.GeneratedResponse =
         result.status === "fulfilled"
           ? result.value
           : { error: result.reason?.message || String(result.reason) };

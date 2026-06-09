@@ -205,7 +205,9 @@ async function openRouterApiRequest(imageLink, myPrompt, modelName) {
 
   // const imageUrl = "https://drive.google.com/thumbnail?sz=w1000&id=1cpHMDtvv5xoEMYqe2PdQZBpIrZIKuoba";
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
-  // model: "google/gemini-2.5-flash-lite-preview-09-2025",
+  // model: "google/gemini-2.5-flash-lite-preview-09-2025",openRouterPrompt2
+  // model: modelName || "google/gemini-2.5-flash",
+  modelName:"google/gemini-3-flash-preview";
   const payload = {
     model: modelName,
     messages: [
@@ -310,7 +312,7 @@ async function openRouterApiRequest2(
       : fewShotExamplesFromEnv();
 
   const targetUrl = dropboxDirectImageUrl(imageLink);
-  const model = modelName || "google/gemini-2.5-flash";
+  const model = modelName || "google/gemini-3-flash-preview";
 
   const exampleMessages = examples.flatMap(({ imageUrl, answer }) => [
     {
@@ -416,7 +418,7 @@ exports.handler = async (event, context) => {
       updatedObjs.push(rowObj);
       continue;
     }
-    promises.push(openRouterApiRequest3(screenshotFile, prompt, modelName));
+    promises.push(openRouterApiRequest(screenshotFile, prompt, modelName));
     rowObj.StructuresPresent = promiseIndex;
     promiseIndex++;
     updatedObjs.push(rowObj);

@@ -207,7 +207,8 @@ async function openRouterApiRequest(imageLink, myPrompt, modelName) {
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
   // model: "google/gemini-2.5-flash-lite-preview-09-2025",openRouterPrompt2
   // model: modelName || "google/gemini-2.5-flash",
-  modelName:"google/gemini-3-flash-preview";
+  // modelName:"google/gemini-3-flash-preview";
+  modelName = "google/gemini-3.1-flash-lite"
   const payload = {
     model: modelName,
     messages: [

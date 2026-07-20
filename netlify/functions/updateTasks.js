@@ -31,6 +31,7 @@ async function upsertToBucket(coll, objArr) {
         insertedIds.push(obj.ID);
       } else {
         console.log(`No changes made for ID: ${obj.ID}`);
+        insertedIds.push(obj.ID);
       }
     } catch (error) {
       console.log(error);

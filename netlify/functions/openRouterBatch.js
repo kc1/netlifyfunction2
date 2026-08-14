@@ -1,5 +1,5 @@
 const fetch = require("node-fetch");
-// model: "google/gemini-2.5-flash",
+// google/gemini-3.7-flash:batch,
 // model: "google/gemini-2.5-flash-preview-09-2025",
 // "model": "google/gemini-3-flash-preview",
 
@@ -46,8 +46,7 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
     // Use the passed modelName, fallback to Gemini 2.5 Flash
     // model: modelName || "google/gemini-2.5-flash",
     // model:"google/gemini-3.5-flash",
-    // model: "google/gemini-3.7-flash:batch",
-    model: "google/gemini-3.7-flash",
+    model:"google/gemini-3-flash-preview",
     // model:"google/gemini-embedding-2",
     // Force OpenRouter/Gemini to return a valid JSON object without markdown fences
     response_format: { type: "json_object" },

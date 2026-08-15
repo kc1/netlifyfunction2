@@ -38,165 +38,6 @@ function promptFromRow(rowObj) {
   return p.trim();
 }
 
-async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
-
-  const payload = {
-    // Use the passed modelName, fallback to Gemini 2.5 Flash
-    // model: modelName || "google/gemini-2.5-flash",
-    // model:"google/gemini-3.5-flash",
-    model:"google/gemini-3-flash-preview",
-    // model:"google/gemini-embedding-2",
-    // Force OpenRouter/Gemini to return a valid JSON object without markdown fences
-    response_format: { type: "json_object" },
-    temperature: 0.0, // Best for consistent classification
-    // reasoning: { visual: true }, // Enable visual reasoning for image inputs
-    reasoning: {
-      max_tokens: 2000, // Allow more tokens for detailed reasoning if needed
-    },
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: `${myPrompt}\n\nHere are some examples:`,
-          },
-        ],
-      },
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Example 1:",
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: "https://www.dropbox.com/scl/fi/nkeiumknhqjajh9cfdon5/010418-00400-1780440917-building.png?rlkey=nd0tqq4qyn0lu3eitigpjc94i&raw=1",
-            },
-            cache_control: { type: "ephemeral" },
-          },
-        ],
-      },
-      {
-        role: "assistant",
-        content: [
-          {
-            type: "text",
-            // MUST MATCH YOUR JSON SCHEMA EXACTLY
-            text: `{\n  "lot_found": "YES",\n  "StructuresPresent": "NO",\n  "structures": [],\n  "notes": "No structures or building footprints are visible within the darker shaded highlighted parcel boundary."\n}`,
-          },
-        ],
-      },
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Example 2:",
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: "https://www.dropbox.com/scl/fi/c0m6wpynhpjbxh30bvc6b/010419-01800-1780441370-building.png?rlkey=jdzo979pof6bsr1t21kk0l7wx&raw=1",
-            },
-            cache_control: { type: "ephemeral" },
-          },
-        ],
-      },
-      {
-        role: "assistant",
-        content: [
-          {
-            type: "text",
-            // MUST MATCH YOUR JSON SCHEMA EXACTLY
-            text: `{\n  "lot_found": "YES",\n  "StructuresPresent": "YES",\n  "structures": [],\n  "notes": "The darker shaded lot area contains a rectangular structure."\n}`,
-          },
-        ],
-      },
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Example 3:",
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: "https://www.dropbox.com/scl/fi/7pdpvnnpke0kbzponq6of/010420-00501-1780441811-building.png?rlkey=c5wy6oaso4mz1nfkg29n2k9cp&raw=1",
-            },
-            cache_control: { type: "ephemeral" },
-          },
-        ],
-      },
-      {
-        role: "assistant",
-        content: [
-          {
-            type: "text",
-            // MUST MATCH YOUR JSON SCHEMA EXACTLY
-
-            text: `{\n  "lot_found": "YES",\n  "StructuresPresent": "NO",\n  "structures": [],\n  "notes": "No structures or building footprints are visible within the darker shaded highlighted parcel boundary."\n}`,
-          },
-        ],
-      },
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Now classify this new image:",
-          },
-          {
-            type: "image_url",
-            image_url: { url: imageLink },
-          },
-        ],
-      },
-    ],
-  };
-
-  const options = {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  };
-
-  try {
-    const response = await fetch(apiEndpoint, options);
-    const responseBody = await response.text();
-
-    // Optional: Keep for debugging, but you may want to remove these logs in production
-    // console.log("Response Code:", response.status);
-    // console.log("Response Body:", responseBody);
-
-    const jsonResponse = JSON.parse(responseBody);
-
-    if (!response.ok || jsonResponse.error) {
-      throw new Error(
-        jsonResponse.error?.message || `OpenRouter HTTP ${response.status}`,
-      );
-    }
-    if (!jsonResponse.choices?.[0]?.message?.content) {
-      throw new Error("OpenRouter response missing choices[0].message.content");
-    }
-
-    // Returns the raw JSON string provided by the model
-    return jsonResponse.choices[0].message.content;
-  } catch (e) {
-    console.error("OpenRouter request failed:", e.message);
-    throw e;
-  }
-}
-
-// openRouterPromptWater
 
 async function openRouterApiRequest(imageLink, myPrompt, modelName) {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -283,101 +124,43 @@ function fewShotExamplesFromEnv() {
   return examples;
 }
 
-/**
- * Few-shot vision request for Gemini 2.5 Flash via OpenRouter.
- * @param {string} imageLink - Target screenshot (Dropbox or other URL)
- * @param {string} myPrompt - Per-row classification prompt
- * @param {string} [modelName] - OpenRouter model id (default: google/gemini-2.5-flash)
- * @param {object} [options]
- * @param {Array<{imageUrl?: string, url?: string, answer: string}>} [options.examples] - Few-shot pairs; defaults to env URLs
- * @param {string} [options.systemInstruction] - Opening instruction before examples
- */
-async function openRouterApiRequest2(
-  imageLink,
-  myPrompt,
-  modelName,
-  options = {},
-) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
-
-  const examples =
-    options.examples?.length > 0
-      ? options.examples.map((ex) => ({
-          imageUrl: dropboxDirectImageUrl(ex.imageUrl || ex.url),
-          answer: String(ex.answer).trim(),
-        }))
-      : fewShotExamplesFromEnv();
-
-  const targetUrl = dropboxDirectImageUrl(imageLink);
-  const model = modelName || "google/gemini-2.5-flash";
-
-  const exampleMessages = examples.flatMap(({ imageUrl, answer }) => [
-    {
-      role: "user",
-      content: [
-        { type: "text", text: "Example image:" },
-        { type: "image_url", image_url: { url: imageUrl } },
+async function createBatchRequestItem(customId, imageLink, myPrompt, modelName = "google/gemini-3.7-flash:batch") {
+  const cid =
+    customId == null || customId === "" ? `id-${Date.now()}` : String(customId);
+  const output = {
+    custom_id: cid,
+    body: {
+      model: modelName,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: myPrompt,
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageLink,
+              },
+            },
+          ],
+        },
       ],
     },
-    { role: "assistant", content: answer },
-  ]);
+  };
+  console.log(JSON.stringify(output, null, 2));
+  return output;
+}
 
+async function submitBatchJob(requestArray) {
   const payload = {
-    model,
-    messages: [
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text:
-              options.systemInstruction ||
-              "You classify property screenshots. Reply with exactly one word: Yes or No.",
-          },
-        ],
-      },
-      ...exampleMessages,
-      {
-        role: "user",
-        content: [
-          { type: "text", text: myPrompt },
-          { type: "image_url", image_url: { url: targetUrl } },
-        ],
-      },
-    ],
+    endpoint: "/v1/chat/completions",
+    model: "google/gemini-3.7-flash:batch",
+    requests: requestArray,
   };
-
-  const requestOptions = {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  };
-
-  try {
-    const response = await fetch(apiEndpoint, requestOptions);
-    const responseBody = await response.text();
-    console.log("Response Code:", response.status);
-    console.log("Response Body:", responseBody);
-
-    const jsonResponse = JSON.parse(responseBody);
-    console.log(jsonResponse);
-    if (!response.ok || jsonResponse.error) {
-      throw new Error(
-        jsonResponse.error?.message || `OpenRouter HTTP ${response.status}`,
-      );
-    }
-    if (!jsonResponse.choices?.[0]?.message?.content) {
-      throw new Error("OpenRouter response missing choices[0].message.content");
-    }
-    return jsonResponse.choices[0].message.content;
-  } catch (e) {
-    console.error("OpenRouter request failed:", e.message);
-    throw e;
-  }
+  return payload;
 }
 
 exports.handler = async (event, context) => {
@@ -400,7 +183,7 @@ exports.handler = async (event, context) => {
   // ID	ScreenshotURL	PROMPT	StructuresPresent	NealsNotes	Status	PromptVersion	Feedback	Seth Note	UNIFIEDPROMPT	RoadAvailable3	RoadAvailable2	RoadAvailable1	ContourResponse	WaterResponse	ShapeMatch	StructureURL	RoadAvailable4	RoadResponse	POINTS	calculatedPerimeterFeet	calcFrontage	ContourURL	WaterURL	Frontage
   let promises = [];
   let updatedObjs = [];
-  let output = [];
+  let requests = [];
   let promiseIndex = 0;
 
   for (let i = 0; i < objArr.length; i++) {
@@ -413,44 +196,44 @@ exports.handler = async (event, context) => {
         `Row ${i}: skipping OpenRouter — missing ${!screenshotFile ? "image URL" : "prompt"}`,
       );
       rowObj.StructuresPresent = { error: "missing image URL or prompt" };
-      updatedObjs.push(rowObj);
+      // requests.push(rowObj);
       continue;
     }
-    promises.push(openRouterApiRequest3(screenshotFile, prompt, modelName));
-    rowObj.StructuresPresent = promiseIndex;
-    promiseIndex++;
-    updatedObjs.push(rowObj);
+    const customId = rowObj.ID;
+    requests.push(
+      await createBatchRequestItem(customId, screenshotFile, prompt, modelName),
+    );
   }
+  
+  console.log("Requests:", JSON.stringify(requests, null, 2));
+  const payload = await submitBatchJob(requests);
+  console.log("Payload:", JSON.stringify(payload));
 
-  console.log("Promises:", promises);
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const response = await fetch("https://openrouter.ai/api/beta/batches", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 
-  const results = await Promise.allSettled(promises);
-  console.log("Results:", results);
+  const batchData = await response.json();
+  console.log("Batch submission response:", JSON.stringify(batchData, null, 2));
+  console.log("Batch submitted! ID:", batchData.id);
 
-  let settledIndex = 0;
-  for (let i = 0; i < updatedObjs.length; i++) {
-    let updatedRowObj = updatedObjs[i];
-    if (typeof updatedRowObj.StructuresPresent === "number") {
-      const result = results[settledIndex++];
-      updatedRowObj.GeneratedResponse =
-        result.status === "fulfilled"
-          ? result.value
-          : { error: result.reason?.message || String(result.reason) };
-    }
-
-    output.push(updatedRowObj);
-  }
-
-  /* const responseBody = {
-    message: `Successfully processed ${output.length} rows`,
-    results: JSON.stringify(output), // ← Important: send as string
-  }; */
+  // Save the ID to disk so you can check it later
+  /* fs.writeFileSync(
+    "last_batch_id.json",
+    JSON.stringify({ batchId: batchData.id }, null, 2),
+  ); */
 
   return {
     statusCode: 200,
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(output),
+    body: JSON.stringify({ batchId: batchData.id }),
   };
 };

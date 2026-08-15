@@ -110,20 +110,6 @@ function dropboxDirectImageUrl(raw) {
   return url;
 }
 
-/** Default Yes/No few-shot PNGs from Dropbox (Netlify env vars). */
-function fewShotExamplesFromEnv() {
-  const examples = [];
-  const yesUrl = process.env.OPENROUTER_FEW_SHOT_YES_URL;
-  const noUrl = process.env.OPENROUTER_FEW_SHOT_NO_URL;
-  if (yesUrl) {
-    examples.push({ imageUrl: dropboxDirectImageUrl(yesUrl), answer: "Yes" });
-  }
-  if (noUrl) {
-    examples.push({ imageUrl: dropboxDirectImageUrl(noUrl), answer: "No" });
-  }
-  return examples;
-}
-
 async function createBatchRequestItem(customId, imageLink, myPrompt, modelName = "google/gemini-3.7-flash:batch") {
   const cid =
     customId == null || customId === "" ? `id-${Date.now()}` : String(customId);
@@ -154,10 +140,10 @@ async function createBatchRequestItem(customId, imageLink, myPrompt, modelName =
   return output;
 }
 
-async function submitBatchJob(requestArray) {
+async function submitBatchJob(requestArray,modelName = "google/gemini-3.7-flash:batch") {
   const payload = {
     endpoint: "/v1/chat/completions",
-    model: "google/gemini-3.7-flash:batch",
+    model: modelName,
     requests: requestArray,
   };
   return payload;
@@ -206,7 +192,7 @@ exports.handler = async (event, context) => {
   }
   
   console.log("Requests:", JSON.stringify(requests, null, 2));
-  const payload = await submitBatchJob(requests);
+  const payload = await submitBatchJob(requests, modelName);
   console.log("Payload:", JSON.stringify(payload));
 
   const apiKey = process.env.OPENROUTER_API_KEY;

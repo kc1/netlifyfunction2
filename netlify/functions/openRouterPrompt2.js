@@ -202,16 +202,29 @@ async function openRouterApiRequest4(imageLink, myPrompt, modelName) {
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
 
   const payload = {
-  model: "google/gemini-3.7-flash",
-  response_format: { type: "json_object" },
-  temperature: 0,
-  messages: [
+    model: "google/gemini-3.7-flash",
+    response_format: { type: "json_object" },
+    temperature: 0,
+    // Sticky routing ensures OpenRouter hits the same backend node holding the cache
+    session_id: "image_classifier_session_1", 
+    messages: [
+      {
+        role: "system",
+        content: [
+          {
+            type: "text",
+            text: myPrompt,
+            // Explicitly mark the system prompt as the cache boundary
+            cache_control: { type: "ephemeral" }, 
+          },
+        ],
+      },
       {
         role: "user",
         content: [
           {
             type: "text",
-            text: `${myPrompt}\n\nNow classify this new image:`,
+            text: "Now classify this new image:",
           },
           {
             type: "image_url",
@@ -234,23 +247,22 @@ async function openRouterApiRequest4(imageLink, myPrompt, modelName) {
   try {
     const response = await fetch(apiEndpoint, options);
     const responseBody = await response.text();
-
-    // Optional: Keep for debugging, but you may want to remove these logs in production
-    // console.log("Response Code:", response.status);
-    // console.log("Response Body:", responseBody);
-
     const jsonResponse = JSON.parse(responseBody);
 
     if (!response.ok || jsonResponse.error) {
       throw new Error(
-        jsonResponse.error?.message || `OpenRouter HTTP ${response.status}`,
+        jsonResponse.error?.message || `OpenRouter HTTP ${response.status}`
       );
     }
     if (!jsonResponse.choices?.[0]?.message?.content) {
       throw new Error("OpenRouter response missing choices[0].message.content");
     }
 
-    // Returns the raw JSON string provided by the model
+    // Check your cache performance in the response metadata
+    if (jsonResponse.usage?.prompt_tokens_details?.cached_tokens) {
+      console.log(`Cache Hit! Saved ${jsonResponse.usage.prompt_tokens_details.cached_tokens} tokens.`);
+    }
+
     return jsonResponse.choices[0].message.content;
   } catch (e) {
     console.error("OpenRouter request failed:", e.message);

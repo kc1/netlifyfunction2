@@ -197,6 +197,68 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
   }
 }
 
+async function openRouterApiRequest4(imageLink, myPrompt, modelName) {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
+
+  const payload = {
+  model: "google/gemini-3.7-flash",
+  response_format: { type: "json_object" },
+  temperature: 0,
+  messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: `${myPrompt}\n\nNow classify this new image:`,
+          },
+          {
+            type: "image_url",
+            image_url: { url: imageLink },
+          },
+        ],
+      },
+    ],
+  };
+
+  const options = {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  };
+
+  try {
+    const response = await fetch(apiEndpoint, options);
+    const responseBody = await response.text();
+
+    // Optional: Keep for debugging, but you may want to remove these logs in production
+    // console.log("Response Code:", response.status);
+    // console.log("Response Body:", responseBody);
+
+    const jsonResponse = JSON.parse(responseBody);
+
+    if (!response.ok || jsonResponse.error) {
+      throw new Error(
+        jsonResponse.error?.message || `OpenRouter HTTP ${response.status}`,
+      );
+    }
+    if (!jsonResponse.choices?.[0]?.message?.content) {
+      throw new Error("OpenRouter response missing choices[0].message.content");
+    }
+
+    // Returns the raw JSON string provided by the model
+    return jsonResponse.choices[0].message.content;
+  } catch (e) {
+    console.error("OpenRouter request failed:", e.message);
+    throw e;
+  }
+}
+
+
 // openRouterPromptWater
 
 async function openRouterApiRequest(imageLink, myPrompt, modelName) {

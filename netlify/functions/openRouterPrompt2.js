@@ -479,7 +479,7 @@ exports.handler = async (event, context) => {
       updatedObjs.push(rowObj);
       continue;
     }
-    promises.push(openRouterApiRequest3(screenshotFile, prompt, modelName));
+    promises.push(openRouterApiRequest4(screenshotFile, prompt, modelName));
     rowObj.StructuresPresent = promiseIndex;
     promiseIndex++;
     updatedObjs.push(rowObj);

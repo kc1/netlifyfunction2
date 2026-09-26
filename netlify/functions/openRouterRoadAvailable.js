@@ -163,7 +163,7 @@ The JSON must be valid, properly formatted, and contain only the "AvailableRoad"
   // ID	ContourURL	WaterURL	ContourResponse	WaterResponse	RoadResponse	POINTS	calculatedPerimeterFeet	 calcFrontage	Frontage
   for (let i = 0; i < objArr.length; i++) {
     const obj = objArr[i];
-    if (obj.RoadURL && obj.RoadURL.includes("dropbox")) {
+    if (obj.RoadURL && obj.RoadURL.includes("https")) {
       roadFile = obj.RoadURL;
       console.log("Road File: " + roadFile);
       promises.push(openRouterApiRequest(roadFile, roadAvailabilityPrompt2));

@@ -384,6 +384,33 @@ async function openRouterApiRequest2(
   }
 }
 
+function getWaterPrompt() {
+  return `    Act as an expert land surveyor and GIS analyst specializing in parcel and flood zone/ground water assessment.
+    Your task: Evaluate the highlighted parcel for buildability based on its ground water, wetland, and flood zone profile. Focus on the light blue, cyan, and patterned shaded areas (which indicate FEMA floodplains, wetlands, and surface water).
+    All properties in this evaluation have been prescreened and confirmed to have road access. Therefore, do not evaluate whether road access exists — assume it does along the named roads bordering or crossing the parcel boundaries.
+    Decision Rule:
+    The lot is considered buildable (YES) ONLY if BOTH conditions are met:
+    a) The total water/flood zone coverage (all blue/cyan areas STRICTLY INSIDE the parcel) is LESS THAN 50% of the total internal lot area.
+    b) The clear, unshaded (tan/beige) dry land is easily accessible from at least one bordering road without having to cross significant water or floodways. Any major internal water bodies or flood zones must remain situated away from the primary road access areas.
+    If the internal water/flood zone coverage is ≥50%, OR if the unshaded dry land is entirely cut off from all adjacent roads by an internal flood zone/wetland, the lot is NOT buildable (NO).
+    Step 1: Identify the highlighted lot.
+    Find the primary parcel being evaluated. It is enclosed by a distinct, solid RED outline. 
+    CRITICAL: Focus only on the area enclosed by this RED boundary line. Massive flood zones or water bodies frequently border the property directly on the outside—you must actively ignore all environmental features to the outside of the parcel line. Do not allow adjacent external floodways to artificially inflate your estimate of the internal area. Ignore UI elements, side menus, text boxes, and search bars.
+    Step 2: Water & Flood Coverage Analysis (Critical Filter)
+    Carefully evaluate only the space inside the RED outline. Estimate the percentage of the highlighted parcel covered by the blue/cyan/teal shaded features (referring to the map's legend for Floodway, 100-year, 500-year, and Wetlands).
+    Locate the main roads (sometimes indicated by white/yellow lines and labels like "County Rd 161") bordering the parcel.
+    Determine if the clear, unshaded (beige/tan) land is accessible directly from these roads, or if the internal water features block that access from all available road frontages.
+    Step 3: Output Requirements
+    You must respond with ONLY a raw, valid JSON object following exactly this schema. Do not include markdown formatting, markdown code blocks, or any conversational text outside the JSON.
+    JSON Schema:
+    {
+    "Analysis_LotFound": "Yes/No. State if you found the parcel enclosed by the RED outline.",
+    "Analysis_WaterCoverage": "Detailed assessment of the flood/wetland percentage STRICTLY INSIDE the parcel boundaries (include approximate %) and its position relative to the main roads (e.g., 'Internal flood zone blocks all highway access' or 'Dry land accessible directly from the northern road').",
+    "Buildable": "Yes/No",
+    "Reasoning": "Brief summary of the final decision based exclusively on the internal water coverage percentage and road accessibility criteria."
+    }`;
+}
+
 exports.handler = async (event, context) => {
   console.log("Hello from Netlify Function!");
 
@@ -412,7 +439,7 @@ exports.handler = async (event, context) => {
   for (let i = 0; i < objArr.length; i++) {
     let rowObj = objArr[i];
     const screenshotFile = normalizeImageUrl(screenshotUrlFromRow(rowObj));
-    const prompt = promptFromRow(rowObj);
+    const prompt = getWaterPrompt();
     console.log("Screenshot File:", screenshotFile.substring(0, 120));
     if (!screenshotFile || !prompt) {
       console.warn(

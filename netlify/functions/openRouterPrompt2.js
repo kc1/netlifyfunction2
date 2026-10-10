@@ -202,7 +202,7 @@ async function openRouterApiRequest4(imageLink, myPrompt, modelName) {
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
 
   const payload = {
-    model: "google/gemini-3.7-flash",
+    model: "google/gemini-3.8-flash",
     response_format: { type: "json_object" },
     temperature: 0,
     // Sticky routing ensures OpenRouter hits the same backend node holding the cache

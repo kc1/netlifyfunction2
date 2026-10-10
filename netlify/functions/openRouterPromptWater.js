@@ -46,7 +46,7 @@ async function openRouterApiRequest3(imageLink, myPrompt, modelName) {
     // Use the passed modelName, fallback to Gemini 2.5 Flash
     // model: modelName || "google/gemini-2.5-flash",
     // model:"google/gemini-3.5-flash",
-    model:"google/gemini-3-flash-preview",
+    model: "google/gemini-3-flash-preview",
     // model:"google/gemini-embedding-2",
     // Force OpenRouter/Gemini to return a valid JSON object without markdown fences
     response_format: { type: "json_object" },
@@ -207,7 +207,7 @@ async function openRouterApiRequest(imageLink, myPrompt, modelName) {
   const apiEndpoint = "https://openrouter.ai/api/v1/chat/completions";
   // model: "google/gemini-2.5-flash-lite-preview-09-2025",openRouterPrompt2
   // model: modelName || "google/gemini-2.5-flash",
-  modelName:"google/gemini-3-flash-preview";
+  modelName = "google/gemini-3.8-flash";
   // google/gemini-3-flash-preview
   // modelName = "google/gemini-3.1-flash-lite"
   const payload = {
@@ -385,7 +385,7 @@ async function openRouterApiRequest2(
 }
 
 function getWaterPrompt() {
-  return `    Act as an expert land surveyor and GIS analyst specializing in parcel and flood zone/ground water assessment.
+  return ` Act as an expert land surveyor and GIS analyst specializing in parcel and flood zone/ground water assessment.
     Your task: Evaluate the highlighted parcel for buildability based on its ground water, wetland, and flood zone profile. Focus on the light blue, cyan, and patterned shaded areas (which indicate FEMA floodplains, wetlands, and surface water).
     All properties in this evaluation have been prescreened and confirmed to have road access. Therefore, do not evaluate whether road access exists — assume it does along the named roads bordering or crossing the parcel boundaries.
     Decision Rule:
@@ -423,7 +423,7 @@ exports.handler = async (event, context) => {
   if (!Array.isArray(objArr)) {
     throw new Error("Expected myrows array in request body");
   }
-  
+
   let modelName = "google/gemini-3-flash-preview";
 
   console.log(`Received ${objArr.length} row objects`);

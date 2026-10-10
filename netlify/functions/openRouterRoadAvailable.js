@@ -155,7 +155,44 @@ Respond in this exact format:
 The JSON must be valid, properly formatted, and contain only the "AvailableRoad" key with "Yes" or "No".
 
 `;
+  
+const roadAvailabilityPrompt3 = `Act as an experienced real estate investor and professional GIS land surveyor.
 
+### Objective:
+Determine whether the highlighted parcel has direct vehicular road access (either through road frontage/adjacency or by an internal road traversing the lot).
+
+### Instructions:
+
+1. **Locate the Subject Parcel:**
+   - Identify the primary highlighted lot (rendered as a polygon with a clear perimeter border and fill).
+
+2. **Identify Roads:**
+   - Roads appear as distinct, consistent linear or curvilinear corridors (typically light/dark gray or labeled paths, e.g., "Mississippi Hwy 393", "T W Luke Rd").
+   - Disregard parcel boundary lines, grid lines, or map UI elements.
+
+3. **Determine Road Access (Evaluate for ANY of the following):**
+   - **Frontage / Adjacency (Most Common):** Does any portion of the parcel's perimeter border, touch, or run parallel along the edge of a road corridor?
+   - **Bisecting / Internal Road:** Does a road traverse through, intersect, or terminate inside the parcel boundary?
+   - **Physical Point of Access:** Is the property directly reachable from a vehicular road without crossing an intervening third-party parcel?
+
+4. **Classify Access:**
+   - **"Yes"**: The lot directly touches, borders, fronts, or contains a vehicular road.
+   - **"No"**: The lot is landlocked (completely surrounded by other parcels, terrain, or open space with no road directly touching or entering its perimeter).
+
+### Response Format:
+1. Provide a concise technical assessment (identifying the specific road name/corridor and the boundary edge where access occurs).
+2. Add two blank newlines.
+3. Output the separator: -----------
+4. Add two more blank newlines.
+5. Output a valid JSON object in this exact schema:
+\`\`\`json
+{
+  "HasRoadAccess": "Yes|No",
+  "AccessType": "Frontage|Internal|Landlocked",
+  "IdentifiedRoads": ["Road Name 1", "Road Name 2"]
+}
+\`\`\``;
+  
   let promises = [];
   let myObjs = [];
   let roadFile;
@@ -166,7 +203,7 @@ The JSON must be valid, properly formatted, and contain only the "AvailableRoad"
     if (obj.RoadURL && obj.RoadURL.includes("https")) {
       roadFile = obj.RoadURL;
       console.log("Road File: " + roadFile);
-      promises.push(openRouterApiRequest(roadFile, roadAvailabilityPrompt2));
+      promises.push(openRouterApiRequest(roadFile, roadAvailabilityPrompt3));
       promiseIndices.push(myObjs.length);
       myObjs.push(obj);
     }

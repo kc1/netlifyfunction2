@@ -187,7 +187,7 @@ Determine whether the highlighted parcel has direct vehicular road access (eithe
 5. Output a valid JSON object in this exact schema:
 \`\`\`json
 {
-  "HasRoadAccess": "Yes|No",
+  "AvailableRoad": "Yes|No",
   "AccessType": "Frontage|Internal|Landlocked",
   "IdentifiedRoads": ["Road Name 1", "Road Name 2"]
 }
